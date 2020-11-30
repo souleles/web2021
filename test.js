@@ -1,6 +1,5 @@
 //ΕXW PGADMIN4 GIA DATABASE, NA DW DBEAVER KALUTERA
 //knex gia conenction me database -> knex.js.org documentation
-//idea gia json: save olo sth db, kai select perioxes >/</... apo times p thelw
 
 const express = require('express');
 const app = express();
