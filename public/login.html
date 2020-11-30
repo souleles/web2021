@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Login Form</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <form action="/signin" method="POST">
+            <div class="login-box">
+                <h1>Login</h1>
+                
+                <div class="textbox">
+                    <!-- <i class="fas fa-user"></i> -->
+                    <label for="email">Email</label>
+                    <input type="text" placeholder="Enter Email" name="email" required> 
+                </div>
+
+                <div class="textbox">
+                    <!-- <i class="fas fa-lock"></i> -->
+                    <label for="password">Password</label>
+                    <input type="password" placeholder="Enter Password" name="password" required>
+                </div>
+
+                <input class="btn" type="submit" name="" value="Sign in">
+            </div>
+            <div class="reference">
+                <p>Don't have an account? <a href="/register">Register</a>.</p>
+            </div>
+        </form>
+    </body> 
+</html>
