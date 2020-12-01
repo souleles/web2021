@@ -5,7 +5,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt-nodejs');
 const session = require('express-session');
 const knex = require('knex');
 const { response } = require('express');
@@ -94,7 +94,7 @@ app.post('/signin', redirectHome, (req,res) => {
             .where('email', '=', req.body.email)
             .then(user => {
                 req.session.userID = 1;
-                console.log('after validation', req.session)
+                console.log('after validation!', req.session)
                 res.redirect('/home')
                 //res.json(user[0])
             })
