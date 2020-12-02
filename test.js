@@ -1,6 +1,6 @@
 //knex gia conenction me database -> knex.js.org documentation
 //TO DO: 1. flash for password, complete restrictions for passwords
-//       2. logout button make it work at home, and make /user/:id page
+//       2. logout button make it work at home, and make /user/:id page 
 
 const express = require('express');
 const app = express();
