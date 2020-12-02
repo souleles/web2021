@@ -1,5 +1,6 @@
-//ΕXW PGADMIN4 GIA DATABASE, NA DW DBEAVER KALUTERA
 //knex gia conenction me database -> knex.js.org documentation
+//TO DO: 1. flash for password, complete restrictions for passwords
+//       2. logout button make it work at home, and make /user/:id page
 
 const express = require('express');
 const app = express();
@@ -8,14 +9,15 @@ const path = require('path');
 const bcrypt = require('bcrypt-nodejs');
 const session = require('express-session');
 const knex = require('knex');
+const KnexSessionStore = require('connect-session-knex')(session);
 const { response } = require('express');
 const { exists } = require('fs');
 
 const PORT = process.env.PORT || 7000;
 
-    
 const db  = knex({
     client: 'pg',
+    //useNullAsDefault: true,
     connection: {
       host : '127.0.0.1', //idio me localhost
       user : 'postgres',
@@ -24,22 +26,29 @@ const db  = knex({
     }
 });
 
-app.use(bodyParser.urlencoded({extended: true})); //false ? true
+// const store = new KnexSessionStore({
+//     db,
+//     tablename: 'sessions', // optional. Defaults to 'sessions'
+//   });
+
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.static('public'));
-app.use(session({
-    secret: 'project',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        //maxAge: 5000, //if not given it expires when the browser closes
-        sameSite: true,
-        secure: true }
-  }))
+
+app.use(
+    session({
+        secret: 'keyboard cat',
+        resave: false,
+        saveUninitialized: false,
+        //store,
+        cookie: {
+            maxAge: 5000, // 5 seconds for testing
+        },
+    }),
+);
 
 //check if there is a user session, if user is authenticated
 const redirectLogin = (req,res,next) => {
-    console.log('in redirectlogin ',req.session.userID)
     if(!req.session.userID){
         res.redirect('/signin')
     }else{
@@ -48,7 +57,6 @@ const redirectLogin = (req,res,next) => {
 }
 
 const redirectHome = (req,res,next) => {
-    console.log('at redirecthome', req.session.userID)
     if(req.session.userID){
         res.redirect('/home')
     }else{
@@ -64,16 +72,11 @@ app.get('/', redirectLogin, (req,res) =>{
 });
 
 app.get('/home', redirectLogin, (req,res) =>{
-    //const { userID } = req.session
-    //console.log('userID = ', userID)
-    console.log('home page');
     res.send('hi');
 });
 
 app.get('/signin', redirectHome, (req,res) => {
-    //req.session.userID = 1
     res.sendFile(path.join(__dirname, '/public', 'login.html'));
-    console.log('AT GET LOGIN', req.session)
 });
 
 app.get('/register', redirectHome, (req, res) => {
@@ -82,19 +85,17 @@ app.get('/register', redirectHome, (req, res) => {
 
 app.post('/signin', redirectHome, (req,res) => {
     const { userID } = req.session
-    console.log('AT POST LOGIN', req.session)
 
-    db.select('email', 'password').from('users')
+    db.select('email', 'password', 'id').from('users')
     .where('email', '=', req.body.email)
     .then(data => {
         const isValid = bcrypt.compareSync(req.body.password, data[0].password);
-        console.log('validation:', isValid);
+        console.log('validation after post login:', isValid);
         if (isValid){
             return db.select('*').from('users')
             .where('email', '=', req.body.email)
             .then(user => {
-                req.session.userID = 1;
-                console.log('after validation!', req.session)
+                req.session.userID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
                 res.redirect('/home')
                 //res.json(user[0])
             })

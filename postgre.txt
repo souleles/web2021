@@ -1,0 +1,14 @@
+sudo -i -u postgres
+psql                    // TOGETHER: sudo -u postgres psql
+
+\q                      //to exit
+
+\dt                     //to show tables
+\password               // enter: web, USEFUL ONLY THE FIRST TIME TO CONNECT THE DB TO THE SERVER
+
+
+
+CREATE DATABASE test;
+\c test;                 //connect to test db
+create table users(id serial primary key, email text unique, password text, joined timestamp);
+select * from users;
