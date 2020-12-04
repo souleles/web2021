@@ -1,6 +1,7 @@
 //knex gia conenction me database -> knex.js.org documentation
 //TO DO: 1. login jquery msg
-//       2. logout button make it work at home, and make /user/:id page
+//       2. study query strings
+//       3. upload, edit users
 
 const express = require('express');
 const app = express();
@@ -31,7 +32,7 @@ const db  = knex({
 //     tablename: 'sessions', // optional. Defaults to 'sessions'
 //   });
 
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: true})); //false?
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
@@ -42,12 +43,12 @@ app.use(
         saveUninitialized: false,
         //store,
         cookie: {
-            maxAge: 5000, // 5 seconds for testing
+            maxAge: 1000*60*10, // 10 minutes for testing
         },
     }),
 );
 
-//check if there is a user session, if user is authenticated
+//Check if a user session has not been created
 const redirectLogin = (req,res,next) => {
     if(!req.session.userID){
         res.redirect('/signin')
@@ -56,6 +57,7 @@ const redirectLogin = (req,res,next) => {
     }
 }
 
+//Check if a user session has been created
 const redirectHome = (req,res,next) => {
     if(req.session.userID){
         res.redirect('/home')
@@ -65,13 +67,13 @@ const redirectHome = (req,res,next) => {
 }
 
 
-app.get('/', redirectLogin, (req,res) =>{
+app.get('/', (req,res) =>{
     //const { userID } = req.session
-    res.send('hi');
+    res.sendFile(path.join(__dirname, '/public', 'home.html'));
 });
 
-app.get('/home', redirectLogin, (req,res) =>{
-    res.send('hi');
+app.get('/home', (req,res) =>{
+    res.sendFile(path.join(__dirname, '/public', 'home.html'));
 });
 
 app.get('/signin', redirectHome, (req,res) => {
@@ -81,6 +83,39 @@ app.get('/signin', redirectHome, (req,res) => {
 app.get('/register', redirectHome, (req, res) => {
     res.sendFile(path.join(__dirname, '/public', 'register.html'));
 });
+
+app.post('/register', redirectHome, (req,res) => {
+    let exists = false;
+    const {email, password} = req.body
+    const hash = bcrypt.hashSync(password);
+
+    //checking if user already exists
+    db.select('email').from('users')
+    .then(data => {
+        data.forEach(email => {
+            if(req.body.email === email.email ){
+                exists = true;
+                res.status(400).json('email already exists')
+                //window.alert('email already exists');
+            }
+        })
+        if (!exists){
+            return db('users')
+                .returning('*')
+                .insert({
+                    email: email,
+                    password: hash,
+                    joined: new Date()
+                })
+                .then(data  => {
+                    req.session.userID = data[0].id
+                    res.redirect('/home')
+                })
+        }else{
+            res.status(400).send('user already exists')
+        } 
+    })
+})
 
 app.post('/signin', redirectHome, (req,res) => {
     const { userID } = req.session
@@ -95,7 +130,7 @@ app.post('/signin', redirectHome, (req,res) => {
             .where('email', '=', req.body.email)
             .then(user => {
                 req.session.userID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
-                res.redirect('/home')
+                res.redirect('/users?id=' + data[0].id)
                 //res.json(user[0])
             })
             .catch(err => res.status(400).json('unable to get user'))
@@ -108,52 +143,12 @@ app.post('/signin', redirectHome, (req,res) => {
     .catch(err => res.status(400).json('wrong credentials2, email'))
 })
 
-app.post('/register', redirectHome, (req,res) => {
-    let exists = false;
-    const {email, password} = req.body
-    const hash = bcrypt.hashSync(password);
-    // bcrypt.hash(password, null, null, function(err, hash) {
-    //     // Store hash in your password DB.
-    //     console.log('hashed password:', hash);
-    // });
-
-    //checking if user already exists
-    db.select('email').from('users')
-    .then(data => {
-        data.forEach(email => {
-            if(req.body.email === email.email ){
-                exists = true;
-                //res.status(400).json('email already exists')
-                //window.alert('email already exists');
-            }
-        })
-        if (!exists){
-            return db('users')
-                .returning('*')
-                .insert({
-                    email: email,
-                    password: hash,
-                    joined: new Date()
-                }).then(res.redirect('/'))
-        }else{
-            res.status(400).send('user already exists')
-        } 
-    })
-})
-
-app.post('/logout', redirectLogin, function(req, res){
-    req.session.destroy(function(){
-       console.log("user logged out.")
-    });
-    res.redirect('/login');
- });
-
-app.get('/profile/:id', (req,res) =>{
-    const{ id } = req.params;
+app.get('/users', redirectLogin, (req,res) =>{                //pigainei stin selida ../users?id=2
+    const id  = req.session.userID;
     db.select('*').from('users').where({'id': id})
     .then(user => {
         if (user.length){
-            res.json(user[0])
+            res.sendFile(path.join(__dirname, '/public', 'users.html'));
         }else{
             res.status(400).json('not found')
         }
@@ -161,18 +156,32 @@ app.get('/profile/:id', (req,res) =>{
     .catch(err => res.status(400).json('error getting user'))          
 })
 
-app.put('/image', (req,res) => {
-    const{ id } = req.body;
-    db('users').where('id', '=', id)
-    .increment('entries', 1)
-    .returning('entries')
-    .then(entries => {
-        res.json(entries[0]);
-    })
-    .catch(err => res.status(400).json('didnt get entries'))
+
+// app.get('/users/:id', redirectLogin, (req,res) =>{    //pigainei stin selida ../users/2
+//     const{ id } = req.params;
+//     db.select('*').from('users').where({'id': id})
+//     .then(user => {
+//         if (user.length){
+//             res.sendFile(path.join(__dirname, '/public', 'users.html'));
+//         }else{
+//             res.status(400).json('not found')
+//         }
+//     })
+//     .catch(err => res.status(400).json('error getting user'))          
+// })
+
+app.get('/editprofile', (req,res)=>{
+    res.sendFile(path.join(__dirname, '/public', 'edit.html'));
 })
 
-//ERROR PAGE
+app.post('/logout', redirectLogin, function(req, res){
+    req.session.destroy(function(){
+       console.log("user logged out.")
+    });
+    res.redirect('/signin');
+ });
+
+ //ERROR PAGE
 //handles the non-existent paths
 app.get('*', (req, res, next) => {
 	res.status(200).send('Sorry, requested page not found.');
