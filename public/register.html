@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html>
+
   <head>
     <meta charset="utf-8" name="viewport">
     <title>Register</title>
     <link rel="stylesheet" href="style.css">
   </head>
+
   <body>
+    
     <form action="/register" method="POST">
       <div class="login-box">
         <h1>Register</h1>
 
       <div class="textbox">
         <label for="email">Email</label>
-        <input type="text" placeholder="Enter Email" name="email" required>
+        <input type="email" id='email' placeholder="Enter Email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" oninvalid="this.setCustomValidity('Invalid email: example@example.com')" oninput="this.setCustomValidity('')" name="email" required>
       </div>
 
       <div class="textbox">
         <label for="password">Password</label>
-        <input type="password" placeholder="Enter Password" name="password" required>
+        <input type="password" id='password' placeholder="Enter Password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" oninvalid="this.setCustomValidity('Must contain at east 8 characters, at least 1 UpperCase, 1 number, 1 special character')" oninput="this.setCustomValidity('')" name="password" required>
       </div>
 
         <button type="submit" class="btn">Register</button>
@@ -28,4 +31,5 @@
       </div>
     </form>
   </body>
+
 </html>

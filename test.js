@@ -1,5 +1,5 @@
 //knex gia conenction me database -> knex.js.org documentation
-//TO DO: 1. flash for password, complete restrictions for passwords
+//TO DO: 1. login jquery msg
 //       2. logout button make it work at home, and make /user/:id page
 
 const express = require('express');
@@ -66,8 +66,7 @@ const redirectHome = (req,res,next) => {
 
 
 app.get('/', redirectLogin, (req,res) =>{
-    const { userID } = req.session
-    console.log(userID)
+    //const { userID } = req.session
     res.send('hi');
 });
 
@@ -101,11 +100,12 @@ app.post('/signin', redirectHome, (req,res) => {
             })
             .catch(err => res.status(400).json('unable to get user'))
         }else{
-            res.status(400).json('wrong credentials1')
+            res.redirect('/signin');
+            //res.status(400).redirect('/signin')//.json('wrong credentials1 - password')
         }
 
     })
-    .catch(err => res.status(400).json('wrong credentials2'))
+    .catch(err => res.status(400).json('wrong credentials2, email'))
 })
 
 app.post('/register', redirectHome, (req,res) => {
