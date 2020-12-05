@@ -19,6 +19,11 @@
       </div>
 
       <div class="textbox">
+        <label for="Username">Username</label>
+        <input type="text" id='username' placeholder="Enter Username" name="username" required>
+      </div>
+
+      <div class="textbox">
         <label for="password">Password</label>
         <input type="password" id='password' placeholder="Enter Password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" oninvalid="this.setCustomValidity('Must contain at east 8 characters, at least 1 UpperCase, 1 number, 1 special character')" oninput="this.setCustomValidity('')" name="password" required>
       </div>

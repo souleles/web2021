@@ -7,8 +7,14 @@ psql                    // TOGETHER: sudo -u postgres psql
 \password               // enter: web, USEFUL ONLY THE FIRST TIME TO CONNECT THE DB TO THE SERVER
 
 
-
 CREATE DATABASE test;
+DROP table;              //to delete already made table
 \c test;                 //connect to test db
-create table users(id serial primary key, email text unique, password text, joined timestamp);
+\d                       //to see the tables
+
+create table users(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL);
+insert into users(email, password, username) values ('savvas@gmail.com', 'savvas', 'savvikos'); 
+//insert at terminal because the other passwords will be hashed and with restrictions, i want to use as eg
+
+
 select * from users;

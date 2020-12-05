@@ -6,34 +6,16 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-
-    <!-- <script type = "text/javascript" 
-        src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js">
-    </script>
-       
-    <script type = "text/javascript" language = "javascript">
-        $(document).ready(function() {
-            $.post( "http://localhost:7000/signin", function( data ) {
-                console.log(typeof data);
-                alert(typeof data);
-                alert( "Data Loaded: " + data );
-            });
-
-        });
-    </script>	 -->
-
         <form action="/signin" method="POST">
             <div class="login-box">
                 <h1>Login</h1>
                 
                 <div class="textbox">
-                    <!-- <i class="fas fa-user"></i> -->
                     <label for="email">Email</label>
                     <input type="text" placeholder="Enter Email" name="email" required> 
                 </div>
 
                 <div class="textbox">
-                    <!-- <i class="fas fa-lock"></i> -->
                     <label for="password">Password</label>
                     <input type="password" placeholder="Enter Password" name="password" required>
                 </div>
@@ -44,5 +26,6 @@
                 <p>Don't have an account? <a href="/register">Register</a>.</p>
             </div>
         </form>
+        <script type="text/javascript" src="fetch.js"></script>
     </body> 
 </html>

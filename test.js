@@ -1,7 +1,7 @@
 //knex gia conenction me database -> knex.js.org documentation
-//TO DO: 1. login jquery msg
+//TO DO: 1. login jquery msg - flash-msg !!!!!!!!must do submits from javascript 
 //       2. study query strings
-//       3. upload, edit users
+//       3. upload
 
 const express = require('express');
 const app = express();
@@ -43,7 +43,7 @@ app.use(
         saveUninitialized: false,
         //store,
         cookie: {
-            maxAge: 1000*60*10, // 10 minutes for testing
+            maxAge: 1000*60*10*6, // 1hour for testing
         },
     }),
 );
@@ -60,19 +60,15 @@ const redirectLogin = (req,res,next) => {
 //Check if a user session has been created
 const redirectHome = (req,res,next) => {
     if(req.session.userID){
-        res.redirect('/home')
+        res.redirect('/')
     }else{
         next()
     }
 }
 
 
-app.get('/', (req,res) =>{
+app.get('/', redirectLogin, (req,res) =>{
     //const { userID } = req.session
-    res.sendFile(path.join(__dirname, '/public', 'home.html'));
-});
-
-app.get('/home', (req,res) =>{
     res.sendFile(path.join(__dirname, '/public', 'home.html'));
 });
 
@@ -86,7 +82,7 @@ app.get('/register', redirectHome, (req, res) => {
 
 app.post('/register', redirectHome, (req,res) => {
     let exists = false;
-    const {email, password} = req.body
+    const {email, username, password} = req.body
     const hash = bcrypt.hashSync(password);
 
     //checking if user already exists
@@ -105,14 +101,15 @@ app.post('/register', redirectHome, (req,res) => {
                 .insert({
                     email: email,
                     password: hash,
-                    joined: new Date()
+                    username: username
                 })
                 .then(data  => {
                     req.session.userID = data[0].id
-                    res.redirect('/home')
+                    res.redirect('/users?id=' + data[0].id)
                 })
         }else{
-            res.status(400).send('user already exists')
+            res.status(400).redirect('/register');
+            //res.status(400).send('user already exists')
         } 
     })
 })
@@ -135,7 +132,7 @@ app.post('/signin', redirectHome, (req,res) => {
             })
             .catch(err => res.status(400).json('unable to get user'))
         }else{
-            res.redirect('/signin');
+            res.status(404).redirect('/signin?password=wrong');
             //res.status(400).redirect('/signin')//.json('wrong credentials1 - password')
         }
 
@@ -156,23 +153,51 @@ app.get('/users', redirectLogin, (req,res) =>{                //pigainei stin se
     .catch(err => res.status(400).json('error getting user'))          
 })
 
-
-// app.get('/users/:id', redirectLogin, (req,res) =>{    //pigainei stin selida ../users/2
-//     const{ id } = req.params;
-//     db.select('*').from('users').where({'id': id})
-//     .then(user => {
-//         if (user.length){
-//             res.sendFile(path.join(__dirname, '/public', 'users.html'));
-//         }else{
-//             res.status(400).json('not found')
-//         }
-//     })
-//     .catch(err => res.status(400).json('error getting user'))          
-// })
-
-app.get('/editprofile', (req,res)=>{
+app.get('/editprofile', redirectLogin, (req,res)=>{
     res.sendFile(path.join(__dirname, '/public', 'edit.html'));
 })
+
+app.post('/editprofile', redirectLogin, (req,res)=>{
+    db.select('username', 'password').from('users')
+    .where('email', '=', req.body.email)
+    .then(data => {
+        //change password
+        if(req.body.oldpassword && req.body.newpassword){
+            console.log('hi?');
+            const isValid = bcrypt.compareSync(req.body.oldpassword, data[0].password);
+            if(isValid){
+                const hash = bcrypt.hashSync(req.body.newpassword);
+                //update password
+                return db('users')
+                .returning('*')
+                .where('email', '=', req.body.email)
+                .update({
+                    password: hash,
+                    thisKeyIsSkipped: undefined
+                }).then(data =>{
+                    console.log('Password changed successfully!');
+                    res.redirect('/editprofile');
+                })
+            }else{
+                res.send('wrong old password');
+            }
+        //change username
+        }else if(req.body.username){
+            return db('users')
+                .returning('*')
+                .where('email', '=', req.body.email)
+                .update({
+                    username: req.body.username,
+                    thisKeyIsSkipped: undefined
+                }).then(data =>{
+                    console.log('Username changed successfully!');
+                    res.redirect('/editprofile');
+                })
+        }
+    }).catch(err => console.log(err));
+})
+
+
 
 app.post('/logout', redirectLogin, function(req, res){
     req.session.destroy(function(){

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="../style1.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <title>Home Page</title>
+    </head>
+    <body>
+        <div class="topnav">
+            <a href="/users">Home</a>
+            <div class="dropdown">
+                <button class="dropbtn">Edit Profile 
+                  <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content">
+                  <a href="/editprofile">Edit Username/Password</a>
+                  <a href="#">Info of your data logs</a>
+                </div>
+            </div>
+            <form action="/logout" method="POST">        
+            <input class="btn" type="submit" value="Log out">
+        </div>
+
+    </body>
+</html>
