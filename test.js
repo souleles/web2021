@@ -32,7 +32,7 @@ const db  = knex({
 //     tablename: 'sessions', // optional. Defaults to 'sessions'
 //   });
 
-app.use(bodyParser.urlencoded({extended: true})); //false?
+app.use(bodyParser.urlencoded({extended: false})); //false?
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
@@ -69,7 +69,7 @@ const redirectHome = (req,res,next) => {
 
 app.get('/', redirectLogin, (req,res) =>{
     //const { userID } = req.session
-    res.sendFile(path.join(__dirname, '/public', 'home.html'));
+    res.sendFile(path.join(__dirname, '/public', 'users.html'));
 });
 
 app.get('/signin', redirectHome, (req,res) => {
@@ -105,7 +105,7 @@ app.post('/register', redirectHome, (req,res) => {
                 })
                 .then(data  => {
                     req.session.userID = data[0].id
-                    res.redirect('/users?id=' + data[0].id)
+                    res.redirect('/users')
                 })
         }else{
             res.status(400).redirect('/register');
@@ -116,7 +116,6 @@ app.post('/register', redirectHome, (req,res) => {
 
 app.post('/signin', redirectHome, (req,res) => {
     const { userID } = req.session
-
     db.select('email', 'password', 'id').from('users')
     .where('email', '=', req.body.email)
     .then(data => {
@@ -127,12 +126,12 @@ app.post('/signin', redirectHome, (req,res) => {
             .where('email', '=', req.body.email)
             .then(user => {
                 req.session.userID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
-                res.redirect('/users?id=' + data[0].id)
+                res.redirect('/users');
                 //res.json(user[0])
             })
             .catch(err => res.status(400).json('unable to get user'))
         }else{
-            res.status(404).redirect('/signin?password=wrong');
+            res.status(404).redirect('/signin');
             //res.status(400).redirect('/signin')//.json('wrong credentials1 - password')
         }
 
@@ -142,12 +141,13 @@ app.post('/signin', redirectHome, (req,res) => {
 
 app.get('/users', redirectLogin, (req,res) =>{                //pigainei stin selida ../users?id=2
     const id  = req.session.userID;
-    db.select('*').from('users').where({'id': id})
+    db.select('*').from('users').where('id', '=', id)
     .then(user => {
         if (user.length){
+            console.log('?????');
             res.sendFile(path.join(__dirname, '/public', 'users.html'));
         }else{
-            res.status(400).json('not found')
+            res.status(400).json('not found');
         }
     })
     .catch(err => res.status(400).json('error getting user'))          
@@ -163,7 +163,6 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
     .then(data => {
         //change password
         if(req.body.oldpassword && req.body.newpassword){
-            console.log('hi?');
             const isValid = bcrypt.compareSync(req.body.oldpassword, data[0].password);
             if(isValid){
                 const hash = bcrypt.hashSync(req.body.newpassword);
@@ -194,7 +193,7 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
                     res.redirect('/editprofile');
                 })
         }
-    }).catch(err => console.log(err));
+    }).catch(err => console.log(err, 'username already exists, try again'));
 })
 
 
