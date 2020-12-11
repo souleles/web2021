@@ -13,5 +13,7 @@ DROP table;              //to delete already made table
 \d                       //to see the tables
 
 create table users(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL);
+create table entries(id integer NOT NULL PRIMARY KEY, info json NOT NULL, count integer NOT NULL, last_entry timestamp, ip);
+
 
 select * from users;

@@ -15,12 +15,47 @@
                 </button>
                 <div class="dropdown-content">
                   <a href="/editprofile">Edit Username/Password</a>
-                  <a href="#">Info of your data logs</a>
+                  <button id='view'>Data entries information</button>
                 </div>
             </div>
             <form action="/logout" method="POST">        
             <input class="btn" type="submit" value="Log out">
         </div>
 
+
+        <!-- creating the pop up for data -->
+        <div class="popup center">
+            <i class="bi bi-graph-up"></i>
+            <h3>Your stats</h3><br>
+            
+            <div class="description">
+                No entries yet!
+            </div>
+            <div class="dismiss-btn">
+                <button id='dismiss-popup-btn'>Dismiss</button>
+            </div>
+        </div> 
+
+        <script>
+            document.getElementById('view').addEventListener('click', function(){
+                document.getElementsByClassName('popup')[0].classList.add('active');
+            });
+
+            document.getElementById('dismiss-popup-btn').addEventListener('click', function(){
+                document.getElementsByClassName('popup')[0].classList.remove('active');
+            });
+
+            $(document).ready(function(){
+                $('button#view').click(function(e){
+                    e.preventDefault();
+                    $.get( "/view", function( data ) {
+                        $( ".description" ).html(`Number of Entries: `+ data[0].count + `<br>Last entry: ` + data[0].last_entry);
+                        //alert( "Load was performed." );
+                        //alert(data);
+                    });
+                }); 
+            })
+
+        </script>
     </body>
 </html>

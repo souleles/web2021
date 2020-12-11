@@ -1,7 +1,7 @@
 //knex gia conenction me database -> knex.js.org documentation
 //TO DO: 1. login jquery msg - flash-msg !!!!!!!!must do submits from javascript 
 //       2. study query strings
-//       3. upload
+//       3. improve the users visualisation after popup.active
 
 const express = require('express');
 const app = express();
@@ -13,6 +13,7 @@ const knex = require('knex');
 const KnexSessionStore = require('connect-session-knex')(session);
 const { response } = require('express');
 const { exists } = require('fs');
+const { count } = require('console');
 
 const PORT = process.env.PORT || 7000;
 
@@ -86,7 +87,7 @@ app.post('/register', redirectHome, (req,res) => {
     const hash = bcrypt.hashSync(password);
 
     //checking if user already exists
-    db.select('email').from('users')
+    db.select('email').from('newusers')
     .then(data => {
         data.forEach(email => {
             if(req.body.email === email.email ){
@@ -96,7 +97,7 @@ app.post('/register', redirectHome, (req,res) => {
             }
         })
         if (!exists){
-            return db('users')
+            return db('newusers')
                 .returning('*')
                 .insert({
                     email: email,
@@ -116,13 +117,13 @@ app.post('/register', redirectHome, (req,res) => {
 
 app.post('/signin', redirectHome, (req,res) => {
     const { userID } = req.session
-    db.select('email', 'password', 'id').from('users')
+    db.select('email', 'password', 'id').from('newusers')
     .where('email', '=', req.body.email)
     .then(data => {
         const isValid = bcrypt.compareSync(req.body.password, data[0].password);
         console.log('validation after post login:', isValid);
         if (isValid){
-            return db.select('*').from('users')
+            return db.select('*').from('newusers')
             .where('email', '=', req.body.email)
             .then(user => {
                 req.session.userID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
@@ -141,10 +142,9 @@ app.post('/signin', redirectHome, (req,res) => {
 
 app.get('/users', redirectLogin, (req,res) =>{                //pigainei stin selida ../users?id=2
     const id  = req.session.userID;
-    db.select('*').from('users').where('id', '=', id)
+    db.select('*').from('newusers').where('id', '=', id)
     .then(user => {
         if (user.length){
-            console.log('?????');
             res.sendFile(path.join(__dirname, '/public', 'users.html'));
         }else{
             res.status(400).json('not found');
@@ -153,12 +153,66 @@ app.get('/users', redirectLogin, (req,res) =>{                //pigainei stin se
     .catch(err => res.status(400).json('error getting user'))          
 })
 
+
+app.post('/users', redirectLogin, (req,res) =>{
+    const id =req.session.userID;
+    //console.log(JSON.parse(JSON.stringify(req.body))); // = req.body
+    const har = req.body;
+    // console.log(req.ip);
+    // var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    // if (ip.substr(0, 7) == "::ffff:") {
+    //     ip = ip.substr(7)
+    // }
+    // console.log(ip);
+
+    
+    //save in database as json in info field
+    db.select('id', 'count').from('newusers')
+    .where('id', '=', id)
+    .then(data =>{
+        if(data[0].count = 0){
+            return db('newusers')
+            .returning('*')
+            .insert({info: har,
+                    last_entry: new Date(),
+                    count: data[0].count+1
+                    })
+            .where('id', '=', id)
+            .then((result) => {
+                console.log('result saved:', JSON.stringify(result));
+                res.send('success')
+            }).catch((err) => {
+                console.log(err);
+            });
+        }else{
+            return db('newusers')
+            .returning('*')
+            .update({info: har,
+                    last_entry: new Date(),
+                    count: data[0].count+1
+                    })
+            .where('id', '=', id)
+            .then((result) => {
+                console.log('result saved:', JSON.stringify(result));
+                res.send('success');
+            }).catch((err) => {
+                console.log(err);
+                res.send(err);
+            });
+        }
+    })
+
+});
+
+
+
+
 app.get('/editprofile', redirectLogin, (req,res)=>{
     res.sendFile(path.join(__dirname, '/public', 'edit.html'));
 })
 
 app.post('/editprofile', redirectLogin, (req,res)=>{
-    db.select('username', 'password').from('users')
+    db.select('username', 'password').from('newusers')
     .where('email', '=', req.body.email)
     .then(data => {
         //change password
@@ -167,7 +221,7 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
             if(isValid){
                 const hash = bcrypt.hashSync(req.body.newpassword);
                 //update password
-                return db('users')
+                return db('newusers')
                 .returning('*')
                 .where('email', '=', req.body.email)
                 .update({
@@ -196,6 +250,18 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
     }).catch(err => console.log(err, 'username already exists, try again'));
 })
 
+app.get('/view',redirectLogin, (req,res) => {
+    const id = req.session.userID;
+    db.select('count', 'last_entry').from('newusers')
+    .where('id', '=', id)
+    .returning('*')
+    .then(data =>{
+        data[0].last_entry = data[0].last_entry.toISOString().slice(0,10);
+        res.send(data);
+    })
+    //res.sendFile(path.join(__dirname, '/public', 'view.html'));
+
+});
 
 
 app.post('/logout', redirectLogin, function(req, res){
