@@ -1,7 +1,6 @@
 //knex gia conenction me database -> knex.js.org documentation
-//TO DO: 1. login jquery msg - flash-msg !!!!!!!!must do submits from javascript 
+//TO DO: 1. admin dashboard
 //       2. study query strings
-//       3. improve the users visualisation after popup.active
 
 const express = require('express');
 const app = express();
@@ -82,65 +81,76 @@ app.get('/register', redirectHome, (req, res) => {
 });
 
 app.post('/register', redirectHome, (req,res) => {
-    let exists = false;
-    const {email, username, password} = req.body
-    const hash = bcrypt.hashSync(password);
+    let existsE = false;
+    let existsU = false
+    if(req.body.password && req.body.email && req.body.username){
+        const {email, username, password} = req.body
+        const hash = bcrypt.hashSync(password);
+        
+        
 
-    //checking if user already exists
-    db.select('email').from('newusers')
-    .then(data => {
-        data.forEach(email => {
-            if(req.body.email === email.email ){
-                exists = true;
-                res.status(400).json('email already exists')
-                //window.alert('email already exists');
-            }
-        })
-        if (!exists){
-            return db('newusers')
-                .returning('*')
-                .insert({
-                    email: email,
-                    password: hash,
-                    username: username
-                })
-                .then(data  => {
-                    req.session.userID = data[0].id
-                    res.redirect('/users')
-                })
-        }else{
-            res.status(400).redirect('/register');
-            //res.status(400).send('user already exists')
-        } 
-    })
+        //checking if user already exists
+        db.select('email', 'username').from('newusers')
+        .then(data => {
+            data.forEach(email => {
+                if(req.body.email === email.email ){
+                    existsE = true;
+                    res.status(400).send('Email already exists')
+                }
+            })
+            data.forEach(username => {
+                if(req.body.username === username.username){
+                    existsU = true;
+                    res.status(400).send('Username Already exists')
+                }
+            })
+
+            if (!existsE && !existsU){
+                return db('newusers')
+                    .returning('*')
+                    .insert({
+                        email: email,
+                        password: hash,
+                        username: username
+                    })
+                    .then(data  => {
+                        req.session.userID = data[0].id
+                        res.send(data)
+                    })
+            } 
+        }). catch(err =>{ console.log(err)});
+    }
+    else
+        res.send('Please fill all the fields');
 })
 
 app.post('/signin', redirectHome, (req,res) => {
     const { userID } = req.session
-    db.select('email', 'password', 'id').from('newusers')
-    .where('email', '=', req.body.email)
-    .then(data => {
-        const isValid = bcrypt.compareSync(req.body.password, data[0].password);
-        console.log('validation after post login:', isValid);
-        if (isValid){
-            return db.select('*').from('newusers')
-            .where('email', '=', req.body.email)
-            .then(user => {
-                req.session.userID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
-                res.redirect('/users');
-                //res.json(user[0])
-            })
-            .catch(err => res.status(400).json('unable to get user'))
-        }else{
-            res.status(404).redirect('/signin');
-            //res.status(400).redirect('/signin')//.json('wrong credentials1 - password')
-        }
+    if(req.body.password && req.body.email){
+        db.select('email', 'password', 'id').from('newusers')
+        .where('email', '=', req.body.email)
+        .then(data => {
+            const isValid = bcrypt.compareSync(req.body.password, data[0].password);
+            console.log('validation after post login:', isValid);
+            if (isValid){
+                return db.select('*').from('newusers')
+                .where('email', '=', req.body.email)
+                .then(user => {
+                    req.session.userID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
+                    res.send(user);
+                })
+                .catch(err => res.status(400).json('unable to get user'))
+            }else{
+                //res.status(404).redirect('/signin');
+                res.status(400).send('Password is not correct')
+            }
 
-    })
-    .catch(err => res.status(400).json('wrong credentials2, email'))
+        })
+        .catch(err => res.status(400).send('Email does not exist'))
+    }else {res.send('Please fill all the fields');}
 })
 
-app.get('/users', redirectLogin, (req,res) =>{                //pigainei stin selida ../users?id=2
+app.get('/users', redirectLogin, (req,res) =>{
     const id  = req.session.userID;
     db.select('*').from('newusers').where('id', '=', id)
     .then(user => {
@@ -212,6 +222,7 @@ app.get('/editprofile', redirectLogin, (req,res)=>{
 })
 
 app.post('/editprofile', redirectLogin, (req,res)=>{
+    console.log(req.body);
     db.select('username', 'password').from('newusers')
     .where('email', '=', req.body.email)
     .then(data => {
@@ -222,32 +233,37 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
                 const hash = bcrypt.hashSync(req.body.newpassword);
                 //update password
                 return db('newusers')
-                .returning('*')
+                .returning('password')
                 .where('email', '=', req.body.email)
                 .update({
                     password: hash,
                     thisKeyIsSkipped: undefined
                 }).then(data =>{
                     console.log('Password changed successfully!');
-                    res.redirect('/editprofile');
+                    res.send({'password': data})
                 })
             }else{
-                res.send('wrong old password');
+                res.send('Wrong old Password');
             }
-        //change username
+        }else if((req.body.oldpassword && !req.body.newpassword) || (!req.body.oldpassword && req.body.newpassword)){
+                res.send('Please fill all the fields');
+            
+            //change username
         }else if(req.body.username){
-            return db('users')
-                .returning('*')
-                .where('email', '=', req.body.email)
-                .update({
-                    username: req.body.username,
-                    thisKeyIsSkipped: undefined
-                }).then(data =>{
-                    console.log('Username changed successfully!');
-                    res.redirect('/editprofile');
-                })
-        }
-    }).catch(err => console.log(err, 'username already exists, try again'));
+            if(req.body.username !== data[0].username){
+                return db('newusers')
+                    .returning('username')
+                    .where('email', '=', req.body.email)
+                    .update({
+                        username: req.body.username,
+                        thisKeyIsSkipped: undefined
+                    }).then(data =>{
+                        console.log('Username changed successfully!');
+                        res.send({'username': data});
+                    })
+            }else{res.status(400).send('Error: Same username as your current, please pick another one')}
+        }else{res.send('Please fill all the fields');}
+    }).catch(err => console.log(err));
 })
 
 app.get('/view',redirectLogin, (req,res) => {
@@ -259,8 +275,6 @@ app.get('/view',redirectLogin, (req,res) => {
         data[0].last_entry = data[0].last_entry.toISOString().slice(0,10);
         res.send(data);
     })
-    //res.sendFile(path.join(__dirname, '/public', 'view.html'));
-
 });
 
 

@@ -4,12 +4,13 @@
         <meta charset="utf-8">
         <link rel="stylesheet" href="../editstyle.css">
         <title>Edit Profile</title>
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> 
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script> 
             $(function(){
               $("#includedContent").load("navbar.html"); 
             });
-
+            
+            //check if the user is not giving new password the same as old one
             var check = function() {
               if (document.getElementById('old').value ==
                 document.getElementById('new').value) {
@@ -59,12 +60,12 @@
       <div class="container">
         <h3 style="color: white;">Please fill to change your username.</h3>
         <hr>
-        <input type="email" placeholder="Enter Email" name="email" required>
-        <input type="password" placeholder="Enter new Username" name="username" required>
+        <input type="email" placeholder="Enter Email" name="email" id="email" required>
+        <input type="password" placeholder="Enter new Username" name="username" id="username" required>
   
         <div class="clearfix">
           <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
-          <button type="submit" class="signupbtn">Save</button>
+          <button type="submit" id='sendButton' class="signupbtn">Save</button>
         </div>
       </div>
       
@@ -85,6 +86,36 @@
                 modal1.style.display = "none";
               }
             }
+
+            $(document).ready(function(){
+                $('[id=sendButton]').submit(function(e){
+                    e.preventDefault();
+                    $.post({
+                        url: '/editprofile',
+                        type: 'POST',
+                        //contentType: 'application/json', //false?
+                        dataType: 'json',
+                        data: {
+                            email: $('#email').val(),
+                            username: $('#username').val(),
+                            oldpassword: $('#old').val(),
+                            newpassword: $('#new').val()
+                        },
+                        success: function(res){
+                            if(res.username){
+                              alert('Successful change of Username to: ' + res.username[0]);
+                            }else if(res.password){
+                              alert('Successful change of Password');
+                            }
+                            document.location = '/editprofile';
+                        }, error: function(err){
+                            alert( err.responseText);
+                            // $('.errors').html('<li>Error: ' + err.responseText)
+                            //console.log(JSON.stringify(err));
+                        }
+                    });
+                }); 
+            })
             </script>
     </body>
 </html>

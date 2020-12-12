@@ -30,11 +30,6 @@ body{
     margin: 8px 0;
     border-bottom:  1px solid #4caf50;
 }
-.textbox i{
-    width: 26px;
-    float: left;
-    text-align: center;
-}
 .textbox input{
     border: none;
     outline: none;
@@ -45,7 +40,8 @@ body{
     float: left;
     margin: 0 10px;
 }
-.btn{
+#btn{
+    color: white;
     width: 50%;
     background: black;
     border: 2px solid #4caf50;

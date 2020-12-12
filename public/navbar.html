@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="../style1.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Home Page</title>
@@ -16,7 +16,7 @@
                 </button>
                 <div class="dropdown-content">
                   <a href="/editprofile">Edit Username/Password</a>
-                  <button id='view'>Data entries information</button>
+                  <button id='view' >Data entries information</button>
                 </div>
             </div>
             <form action="/logout" method="POST">        
@@ -25,32 +25,39 @@
 
 
         <!-- Creating the pop up for user's data -->
-        <div class="popup center">
-            <i class="bi bi-graph-up"></i>
-            <h3>Your stats</h3><br>
-            
-            <div class="description">
-                No entries yet!
-            </div>
-            <div class="dismiss-btn">
-                <button id='dismiss-popup-btn'>Dismiss</button>
-            </div>
+
+            <div id="popup" class="modal">
+                <div class="description">
+                    <h3>Your stats</h3><br>
+                    <p style="font-style: italic;">No entries yet!</p>
+                    <button id='dismiss-popup-btn'>Close</button>
+                </div>
+                
+
+                    
         </div> 
 
-        <script>
-            document.getElementById('view').addEventListener('click', function(){
-                document.getElementsByClassName('popup')[0].classList.add('active');
-            });
+        <script type='text/javascript'>
+            var modal = document.getElementById('popup');
+            var btn = document.getElementById('view');
+            var span = document.getElementById('dismiss-popup-btn');
+            btn.onclick = function(){
+                modal.style.display = 'block';
+            }
 
-            document.getElementById('dismiss-popup-btn').addEventListener('click', function(){
-                document.getElementsByClassName('popup')[0].classList.remove('active');
-            });
-
+            span.onclick= function(){
+                modal.style.display = 'none';
+            }
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
             $(document).ready(function(){
                 $('button#view').click(function(e){
                     e.preventDefault();
                     $.get( "/view", function( data ) {
-                        $( ".description" ).html(`Number of Entries: `+ data[0].count + `<br>Last entry: ` + data[0].last_entry);
+                        $( "p" ).html(`Number of Entries: `+ data[0].count + `<br>Latest entry: ` + data[0].last_entry);
                         //alert( "Load was performed." );
                         //alert(data);
                     });

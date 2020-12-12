@@ -72,6 +72,7 @@ button:hover {
 
 /* Add padding to container elements */
 .container {
+  margin-top: 50px;
   padding: 16px;
 }
 
