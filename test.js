@@ -1,5 +1,5 @@
 //knex gia conenction me database -> knex.js.org documentation
-//TO DO: 1. admin dashboard
+//TO DO: 1. bulking, ip(both for user)
 //       2. study query strings
 
 const express = require('express');
@@ -285,7 +285,27 @@ app.post('/logout', redirectLogin, function(req, res){
     res.redirect('/signin');
  });
 
- //ERROR PAGE
+
+
+
+
+
+//ΑDMIN PAGE
+app.get('/admin', (req,res) => {
+    res.sendFile(path.join(__dirname, '/public', 'admin.html'));
+});
+
+app.get('/admininfo', (req,res) => {
+    db.count('*').from('users')
+    .then(data => {
+        res.send(data[0].count);
+    })
+});
+
+
+
+
+//ERROR PAGE
 //handles the non-existent paths
 app.get('*', (req, res, next) => {
 	res.status(200).send('Sorry, requested page not found.');
