@@ -1,0 +1,29 @@
+<!--
+    Ip-API login 
+    mail:skoulidis@ceid.upatras.gr
+    pass:web2020
+    API Access Key:  a7bf90aef078658a0ebec35ca98e2df1
+
+
+     http://api.ipapi.com/api/161.185.160.93
+        ? access_key = a7bf90aef078658a0ebec35ca98e2df1
+
+-->
+<!DOCTYPE html>
+<title>IP-API</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <input id="in"><button onclick="findIP()">find ip</button><div id="out"></div>
+
+<script>
+    function findIP(){
+       $.get("https://ipapi.co/"+document.getElementById("in").value+"/json",
+        function(data){
+            
+                document.getElementById("out").innerHTML=
+                'ip: '+data.ip+'<br>City: '+data.city+'<br>Region: '+data.region+'<br>Coutry: '+data.country_name+'<br>Tld: '+data.country_tld
+                +'<br>Langitude'+data.latitude+'<br>Longitude:'+data.longitude;})}</script>
+
+</html>
+
+
