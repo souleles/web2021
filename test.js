@@ -12,7 +12,7 @@ const knex = require('knex');
 const KnexSessionStore = require('connect-session-knex')(session);
 const { response } = require('express');
 const { exists } = require('fs');
-const { count } = require('console');
+const { count, info } = require('console');
 
 const PORT = process.env.PORT || 7000;
 
@@ -296,9 +296,25 @@ app.get('/admin', (req,res) => {
 });
 
 app.get('/admininfo', (req,res) => {
-    db.count('*').from('users')
+    const infoArray=[];
+    db.count('*').from('newusers')
     .then(data => {
-        res.send(data[0].count);
+        // console.log(data[0].count);
+        infoArray.push(data[0].count)
+        //res.send(data[0].count);
+    })
+    db.select(db.raw('info -> \'log\' -> \'entries\'->0->\'request\' ->>\'method\' as method, count(info)')).from('newusers')
+    .whereRaw('info is not NULL')
+    .groupBy('method')
+    .returning('*')
+    .then(data =>{
+        //console.log(data[0].entries.length);
+        // console.log(data[0].method);
+        // console.log(data[0].count)
+        infoArray.push(data[0].method);
+        infoArray.push(data[0].count);     
+        console.log(infoArray);
+           
     })
 });
 
@@ -316,3 +332,14 @@ app.get('*', (req, res, next) => {
 app.listen(PORT, () => {
     console.log(`server initiated at port ${PORT}`);
 })
+
+
+// COUNT(DISTINCT column)
+// In this form, the COUNT(DISTINCT column) returns the number of unique non-null values in the column.
+// SELECT 
+//    COUNT(DISTINCT column) 
+// FROM 
+//    table_name
+// WHERE
+//    condition;
+// We often use the COUNT() function with the GROUP BY clause to return the number of items for each group. For example, we can use the COUNT() with the GROUP BY clause to return the number of films in each film category.

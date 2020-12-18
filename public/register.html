@@ -9,39 +9,40 @@
   </head>
 
   <body>
-      <center><div class="errors" style="color: red; margin-top: 250px ; font-size: 20px;"></div></center>    <form autocomplete="off">
-      <div class="login-box">
-        <h1>Register</h1>
+      <center><div class="errors" style="color: red; margin-top: 250px ; font-size: 20px;"></div></center>    
+      <form autocomplete="off" id="myForm">
+        <div class="login-box">
+          <h1>Register</h1>
 
-      <div class="textbox">
-        <label for="email">Email</label>
-        <input type="email" id='email' placeholder="Enter Email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" oninvalid="this.setCustomValidity('Invalid email: example@example.com')" oninput="this.setCustomValidity('')" name="email" required>
-      </div>
+        <div class="textbox">
+          <label for="email">Email</label>
+          <input type="email" id='email' placeholder="Enter Email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" oninvalid="this.setCustomValidity('Invalid email: example@example.com')" oninput="this.setCustomValidity('')" name="email" required>
+        </div>
 
-      <div class="textbox">
-        <label for="Username">Username</label>
-        <input type="text" id='username' placeholder="Enter Username" name="username" required>
-      </div>
+        <div class="textbox">
+          <label for="Username">Username</label>
+          <input type="text" id='username' placeholder="Enter Username" name="username" required>
+        </div>
 
-      <div class="textbox">
-        <label for="password">Password</label>
-        <input type="password" id='password' placeholder="Enter Password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" oninvalid="this.setCustomValidity('Must contain at east 8 characters, at least 1 UpperCase, 1 number, 1 special character')" oninput="this.setCustomValidity('')" name="password" required>
-      </div>
+        <div class="textbox">
+          <label for="password">Password</label>
+          <input type="password" id='password' placeholder="Enter Password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" oninvalid="this.setCustomValidity('Must contain at east 8 characters, at least 1 UpperCase, 1 number, 1 special character')" oninput="this.setCustomValidity('')" name="password" required>
+        </div>
 
-        <button type="submit" id="btn">Register</button>
-      </div>
-    
-      <div class="reference">
-        <p style="margin-top: -250px;">Already have an account? <a href="/signin">Sign in</a>.</p>
-      </div>
+          <button type="submit" id="btn">Register</button>
+        </div>
+      
+        <div class="reference">
+          <p style="margin-top: -250px;">Already have an account? <a href="/signin">Sign in</a>.</p>
+        </div>
     </form>
 
 
     <script>        
       $(document).ready(function(){
-          $('button#btn').submit(function(e){
+          $('#myForm').submit(function(e){
               e.preventDefault();
-              $.post({
+              $.ajax({
                   url: '/register',
                   type: 'POST',
                   //contentType: 'application/json', //false?
