@@ -18,31 +18,32 @@
 </head>
 <body>
 
-<div id="mapid" style="width: 1500px; height: 740px;"></div>
+<div id="map" style="width: 1500px; height: 740px;"></div>
 <script>
 
-    var mymap = L.map('mapid').setView([38.246639,21.734573], 13);
-                            
-    //var mymap = L.map('mapid').setView([41.0856,23.5497], 14);
+    let map = L.map('map').setView([38.246639,21.734573], 13);
 
+   
 	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
 		maxZoom: 18,
 		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
 			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-		id: 'mapbox/satellite-v9',
-		tileSize: 512,
-		zoomOffset: -1
-    }).addTo(mymap);
+		id: 'mapbox/streets-v11',
+		
+    }).addTo(map);
     
-   /* var marker = L.marker([38.24,21.73]).addTo(mymap);
-    marker.bindPopup("<b>Patras calling!</b>").openPopup();
-*/
-  /*  var polygon = L.polygon([
-    [38.249, 21.73],
-    [38.503, 21.80],
-    [38.701, 21.90]
-]).addTo(mymap);
-*/
+    
+  
+
+var locations = [
+    ["LOCATION_1", 38.246639,21.734573],
+    ["LOCATION_3", 38.286649,21.744569],
+    ["LOCATION_2", 41.0856,23.5497],
+    ["LOCATION_4", 51.51783346917896, -0.13870685198862273],
+    ["LOCATION_5", 49.258261301733135, 2.0725398451198833]
+      ];
+
+
 
 var popup = L.popup();
 
@@ -50,11 +51,25 @@ function onMapClick(e) {
     popup
         .setLatLng(e.latlng)
         .setContent("You clicked the map at " + e.latlng.toString())
-        .openOn(mymap);
+        .openOn(map);
 }
 
-mymap.on('click', onMapClick);
+map.on('click', onMapClick);
+
+for (var i = 0; i < locations.length; i++) {
+    marker = new L.marker([locations[i][1], locations[i][2]])
+      .bindPopup(locations[i][0])
+      
+      .addTo(map);
+  }
+
+function drawline(locations){
+    var polyline = L.polyline(locations,{color : 'red'}).addTo(map);
+}
+drawline();
+ 
 </script>
+
 
 
 
