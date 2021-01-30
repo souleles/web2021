@@ -22,8 +22,9 @@ const db  = knex({
     connection: {
       host : '127.0.0.1', //idio me localhost
       user : 'postgres',
-      password : 'web',
-      database : 'test'
+      password : 'web1',
+      database : 'test',
+      port : 7000
     }
 });
 
@@ -74,6 +75,10 @@ app.get('/', redirectLogin, (req,res) =>{
 
 app.get('/signin', redirectHome, (req,res) => {
     res.sendFile(path.join(__dirname, '/public', 'login.html'));
+});
+
+app.get('/authlogin', redirectHome, (req,res) => {
+    res.sendFile(path.join(__dirname, '/public', 'authlogin.html'));
 });
 
 app.get('/register', redirectHome, (req, res) => {
@@ -127,12 +132,13 @@ app.post('/register', redirectHome, (req,res) => {
 app.post('/signin', redirectHome, (req,res) => {
     const { userID } = req.session
     if(req.body.password && req.body.email){
-        db.select('email', 'password', 'id').from('newusers')
+        db.select('email', 'password', 'id', 'count').from('newusers')
         .where('email', '=', req.body.email)
         .then(data => {
+            const isAdmin = data[0].count;
             const isValid = bcrypt.compareSync(req.body.password, data[0].password);
             console.log('validation after post login:', isValid);
-            if (isValid){
+            if (isValid && isAdmin==0){
                 return db.select('*').from('newusers')
                 .where('email', '=', req.body.email)
                 .then(user => {
@@ -141,6 +147,36 @@ app.post('/signin', redirectHome, (req,res) => {
                 })
                 .catch(err => res.status(400).json('unable to get user'))
             }else{
+                //res.status(404).redirect('/signin');
+                res.status(400).send('Password is not correct')
+            }
+
+        })
+        .catch(err => res.status(400).send('Email does not exist'))
+    }else {res.send('Please fill all the fields');}
+})
+
+app.post('/authlogin', redirectHome, (req,res) => {
+    const { adminID } = req.session
+    if(req.body.password && req.body.username){
+        db.select('username', 'password', 'id', 'count').from('newusers')
+        .where('username', '=', req.body.username)
+        .then(data => {
+            const isAdmin = data[0].count;
+            const isValid = bcrypt.compareSync(req.body.password, data[0].password);
+            console.log('validation after post login:', isValid);
+            if (isValid & isAdmin==1){
+                return db.select('*').from('newusers')
+                .where('username', '=', req.body.username)
+                .then(user => {
+                    req.session.adminID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
+                    res.send(user);
+                })
+                .catch(err => res.status(400).json('unable to get user'))
+            }else if(isAdmin==0){
+                res.status(400).send('Not Authorized Login as User')
+            }
+            else{
                 //res.status(404).redirect('/signin');
                 res.status(400).send('Password is not correct')
             }
