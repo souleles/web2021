@@ -23,6 +23,7 @@
     "express-session": "^1.17.1",
     "express-validator": "^6.7.0",
     "knex": "^0.21.12",
+    "nodemon": "^2.0.7",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "password-regexp": "^1.0.4",

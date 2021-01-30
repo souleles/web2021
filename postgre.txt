@@ -14,6 +14,9 @@ DROP table;              //to delete already made table
 
 create table users(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL);
 create table entries(id integer NOT NULL PRIMARY KEY, info json NOT NULL, count integer NOT NULL, last_entry timestamp, ip);
+create table newusers(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL, info json, count integer DEFAULT 0, last_entry timestamp);
+
+select * from table_name where false;   //name of columns
 
 
 select * from users;

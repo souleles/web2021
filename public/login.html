@@ -47,7 +47,7 @@
                             //location.href = 'users.html';
                             document.location = '/users';
                         }, error: function(err){
-                            $('.errors').html('<li>Error: ' + err.responseText)
+                            $('.errors').html('Error: ' + err.responseText)
                             //console.log(JSON.stringify(err));
                         }
                     });
