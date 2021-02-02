@@ -82,6 +82,7 @@
                 $('button#defaultOpen').click(function(e){
                     e.preventDefault();
                     $.get( "/admininfo", function( data ) {
+                        alert(data);
                         $("p:first").html(`Number of Users:<br><br>`+ data);
                         //alert( "Load was performed." );
                     });

@@ -13,7 +13,7 @@ const { response } = require('express');
 const { exists } = require('fs');
 const { count, info } = require('console');
 
-const PORT = process.env.PORT || 7000;
+const PORT = process.env.PORT || 7001;
 
 const db  = knex({
     client: 'pg',
@@ -288,239 +288,239 @@ app.get('/admin', (req,res) => {
     res.sendFile(path.join(__dirname, '/public', 'admin.html'));
 });
 
-app.get('/admininfo', (req,res) => {
+app.get('/admininfo', async (req,res) => {
     const infoArray=[];
 
     //ADMIN 1a.
-    db.count('*').from('newusers')
-    .then(data => {
-        // console.log(data[0].count);
-        infoArray.push(data[0].count)
-        //res.send(data[0].count);
+    const first = await db.count('*').from('newusers')
+    console.log('------- 1a', first[0].count);
+    infoArray.push(parseInt(first[0].count))
+
+    //Preprocessing, getting max length of entries
+    const preprocess = await db.select(db.raw('info -> \'log\' -> \'entries\' as entries, id')).from('newusers')
+                            .whereRaw('info is not NULL')
+    //console.log(preprocess);
+    var maxLength = 0;
+
+    const lengthArray = [];
+
+    preprocess.forEach(entries => {
+        lengthArray.push(entries.entries.length);
     })
+
+    for (i=0; i <= maxLength; i++){
+        if (lengthArray[i] > maxLength) {
+            maxLength = lengthArray[i];
+        }
+    }
+
+    var finalArray = [];
 
     //ADMIN 1b.
-    db.select(db.raw('info -> \'log\' -> \'entries\' as entries, id')).from('newusers')
-    .whereRaw('info is not NULL')
-    .then(data=>{
-        var maxLength = 0;
-        var final = 0;
-    
-        const lengthArray = [];
-        const methodArray = [];
-        const finalArray = [];
+    const methodArray = [];
+    for(var i=0; i < maxLength; i++){
+        const second = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' as method, count(info)', i)).from('newusers')
+                            .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' is not NULL', i)
+                            .groupBy('method')
+        
+        methodArray.push(second);    
+    }
+    var methodExists = false;
+    var position=0;
 
-        data.forEach(entries => {
-            lengthArray.push(entries.entries.length);
-        })
+    for(var j=0; j<methodArray.length; j++){
+        for(k=0; k<methodArray[j].length; k++){
 
-        for (i=0; i <= maxLength; i++){
-            if (lengthArray[i] > maxLength) {
-                maxLength = lengthArray[i];
+            if(finalArray.length===0){
+                finalArray.push([methodArray[j][k].method, parseInt(methodArray[j][k].count)]);
+            }
+            else{
+                for(m=0; m<finalArray.length; m++){
+                    if(methodArray[j][k].method === finalArray[m][0]){
+                        methodExists = true;
+                        position = m;
+                        break; 
+                    }
+                }
+
+                if(methodExists === true){
+                    finalArray[position][1] = parseInt(methodArray[j][k].count) + parseInt(finalArray[position][1]);
+                }else{
+                    finalArray.push([methodArray[j][k].method, parseInt(methodArray[j][k].count)]);
+
+                }
             }
         }
-        //console.log('maxLength:', maxLength);
-
-        for(var i=0; i < maxLength; i++){
-            db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' as method, count(info)', i)).from('newusers')
-            .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' is not NULL', i)
-            .groupBy('method')
-            .returning('*')
-            .then(data =>{
-                //console.log(data); //typeof(data) = object
-
-                methodArray.push(data);    
-                final = final+1;
-
-                //when methodArray is done
-                var methodExists = false;
-                var position=0;
-
-                if(final === maxLength){
-                    //console.log('\n\nMETHOD ARRAY\n', methodArray);
-                    for(var j=0; j<methodArray.length; j++){
-                        for(k=0; k<methodArray[j].length; k++){
-
-                            if(finalArray.length===0){
-                                finalArray.push([methodArray[j][k].method, parseInt(methodArray[j][k].count)]);
-                            }
-                            else{
-                                for(m=0; m<finalArray.length; m++){
-                                    if(methodArray[j][k].method === finalArray[m][0]){
-                                        methodExists = true;
-                                        position = m;
-                                        break; 
-                                    }
-                                }
-
-                                if(methodExists === true){
-                                    finalArray[position][1] = parseInt(methodArray[j][k].count) + parseInt(finalArray[position][1]);
-                                }else{
-                                    finalArray.push([methodArray[j][k].method, parseInt(methodArray[j][k].count)]);
-
-                                }
-                            }
-                        }
-                    }
-                    console.log('\n', finalArray);
-                }
-            })
-        }
-    })
+    }
+    console.log('\n------------ 1b', finalArray);
+    infoArray.push(finalArray);
+    finalArray = [];
 
     //ADMIN 1c.
-    db.select(db.raw('info -> \'log\' -> \'entries\' as entries, id')).from('newusers')
-    .whereRaw('info is not NULL')
-    .then(data=>{
-        var maxLength = 0;
-        var finalCount = 0;
-    
-        const lengthArray = [];
-        const statusArray = [];
-        const finalArray = [];
-    
-        data.forEach(entries => {
-            lengthArray.push(entries.entries.length);
-        })
+    const statusArray = [];
+    for(var i=0; i < maxLength; i++){
+        const third = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' as status, count(info)', i)).from('newusers')
+                            .whereRaw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' is not NULL', i)
+                            .groupBy('status')
 
-        for (i=0; i <= maxLength; i++){
-            if (lengthArray[i] > maxLength) {
-                maxLength = lengthArray[i];
+        statusArray.push(third);
+    }
+    var statusexists = false;
+    var position=0;
+    for(var j=0; j<statusArray.length; j++){
+        for(k=0; k<statusArray[j].length; k++){
+
+            if(finalArray.length===0){
+                finalArray.push([parseInt(statusArray[j][k].status), parseInt(statusArray[j][k].count)]);
+            }
+            else{
+                for(m=0; m<finalArray.length; m++){
+                    if(parseInt(statusArray[j][k].status) === finalArray[m][0]){
+                        statusexists = true;
+                        position = m;
+                        break; 
+                    }
+                }
+
+                if(statusexists === true){
+                    finalArray[position][1] = parseInt(statusArray[j][k].count) + parseInt(finalArray[position][1]);
+                }else{
+                    finalArray.push([parseInt(statusArray[j][k]), parseInt(statusArray[j][k].count)]);
+
+                }
             }
         }
-        //console.log('maxLength:', maxLength);
-
-        for(var i=0; i < maxLength; i++){
-            db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' as status, count(info)', i)).from('newusers')
-            .whereRaw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' is not NULL', i)
-            .groupBy('status')
-            .returning('*')
-            .then(data =>{
-                //console.log('DATA', data); //typeof(data) = object
-
-                statusArray.push(data);    
-                finalCount = finalCount+1;
-
-                //when statusArray is done
-                var methodExists = false;
-                var position=0;
-
-                if(finalCount === maxLength){
-                    //console.log('\n\nMETHOD ARRAY\n', statusArray);
-                    for(var j=0; j<statusArray.length; j++){
-                        for(k=0; k<statusArray[j].length; k++){
-
-                            if(finalArray.length===0){
-                                finalArray.push([parseInt(statusArray[j][k].status), parseInt(statusArray[j][k].count)]);
-                            }
-                            else{
-                                for(m=0; m<finalArray.length; m++){
-                                    if(parseInt(statusArray[j][k].status) === finalArray[m][0]){
-                                        methodExists = true;
-                                        position = m;
-                                        break; 
-                                    }
-                                }
-
-                                if(methodExists === true){
-                                    finalArray[position][1] = parseInt(statusArray[j][k].count) + parseInt(finalArray[position][1]);
-                                }else{
-                                    finalArray.push([parseInt(statusArray[j][k]), parseInt(statusArray[j][k].count)]);
-
-                                }
-                            }
-                        }
-                    }
-                    console.log('\n', finalArray);
-                }
-            })
-        }
-    })
+    }
+    console.log('\n---------1c', finalArray);
+    infoArray.push(finalArray)
+    finalArray = [];
 
     //ADMIN 1d.
-    db.select(db.raw('info -> \'log\' -> \'entries\' as entries, id')).from('newusers')
-    .whereRaw('info is not NULL')
-    .then(data=>{
-        var maxLength = 0;
-        var finalCount = 0;
-    
-        const lengthArray = [];
-        const urlArray = [];
-        const finalArray = [];
-    
-        data.forEach(entries => {
-            lengthArray.push(entries.entries.length);
-        })
+    const urlArray = [];
+    for(var i=0; i < maxLength; i++){
+        const forth = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' as url, count(info)', i)).from('newusers')
+                            .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' is not NULL', i)
+                            .groupBy('url')
+        
+        urlArray.push(forth);
+    }
+    var urlExists = false;
+    var position=0;
 
-        for (i=0; i <= maxLength; i++){
-            if (lengthArray[i] > maxLength) {
-                maxLength = lengthArray[i];
+    for(var j=0; j<urlArray.length; j++){
+        for(k=0; k<urlArray[j].length; k++){
+
+            if(finalArray.length===0){
+                finalArray.push([(urlArray[j][k].url), parseInt(urlArray[j][k].count)]);
+            }
+            else{
+                for(m=0; m<finalArray.length; m++){
+                    if((urlArray[j][k].url) === finalArray[m][0]){
+                        urlExists = true;
+                        position = m;
+                        break; 
+                    }
+                }
+
+                if(urlExists === true){
+                    finalArray[position][1] = parseInt(urlArray[j][k].count) + parseInt(finalArray[position][1]);
+                }else{
+                    finalArray.push([(urlArray[j][k]), parseInt(urlArray[j][k].count)]);
+
+                }
             }
         }
-        //console.log('maxLength:', maxLength);
-
-        for(var i=0; i < maxLength; i++){
-            db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' as url, count(info)', i)).from('newusers')
-            .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' is not NULL', i)
-            .groupBy('url')
-            .returning('*')
-            .then(data =>{
-                //console.log('DATA', data); //typeof(data) = object
-
-                urlArray.push(data);    
-                finalCount = finalCount+1;
-
-                //when urlArray is done
-                var urlExists = false;
-                var position=0;
-
-                if(finalCount === maxLength){
-                    //console.log('\n\nURL ARRAY\n', urlArray);
-                    for(var j=0; j<urlArray.length; j++){
-                        for(k=0; k<urlArray[j].length; k++){
-
-                            if(finalArray.length===0){
-                                finalArray.push([(urlArray[j][k].url), parseInt(urlArray[j][k].count)]);
-                            }
-                            else{
-                                for(m=0; m<finalArray.length; m++){
-                                    if((urlArray[j][k].url) === finalArray[m][0]){
-                                        urlExists = true;
-                                        position = m;
-                                        break; 
-                                    }
-                                }
-
-                                if(urlExists === true){
-                                    finalArray[position][1] = parseInt(urlArray[j][k].count) + parseInt(finalArray[position][1]);
-                                }else{
-                                    finalArray.push([(urlArray[j][k]), parseInt(urlArray[j][k].count)]);
-
-                                }
-                            }
-                        }
-                    }
-
-                    console.log('\n', finalArray.length);
-                }
-            })
-        }
-    })
+    }
+    console.log('\n-------1d', finalArray.length);
+    infoArray.push(finalArray.length)
 
     //ADMIN 1e.
-    db('newusers').select(db.raw('email into temp table providers')) //change email to provider when added to database
-    .then(data =>{
-        db.countDistinct('email').from('providers')
-        .then(count=>{
-            console.log(count);
-            console.log(count[0].count); //typeof = string
-        })
-    })
+    const fifth1 = await db('newusers').select(db.raw('email into temp table providers1')) //change email to provider when added to database
+    const fifth2 = await db.countDistinct('email').from('providers1')
+    console.log('\n------1e-2',fifth2[0].count); //typeof = string
+    infoArray.push(parseInt(fifth2[0].count));
     
-
-});
-
     //ADMIN 1f
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var contentAgeArray = [];
+
+    //access antries
+    preprocess.forEach(data1 =>{
+        //console.log('data1', data1);
+        //loop through every entries object
+        data1.entries.forEach(entries =>{
+            var lastModExists = 0;
+            //console.log('------ entries', entries);
+            //loop through headers
+            entries.response.headers.forEach(header => {
+                if(header.name === 'last-modified'){
+                    month = header.value.slice(8,11);
+                    monthMod = parseInt(months.indexOf(month)+1);
+                    dayMod = parseInt(header.value.slice(5,7));
+                    yearMod = parseInt(header.value.slice(12,16));
+                    //console.log('\nLAST MODIFIED: ', header.value);
+                    lastModExists=1;
+                }
+                //console.log('---------header', header);
+            })
+            //get content-type and startedDateTime of entries that have last-modified
+            if(lastModExists === 1){
+                entries.response.headers.forEach(header => {
+                    if(header.name === 'content-type'){
+                        contentType = header.value;
+                    }
+                })
+                //console.log('startedDateTime: ', entries.startedDateTime.slice(0,10));
+
+                dayStarted = parseInt(entries.startedDateTime.slice(5,7));
+                monthStarted = parseInt(entries.startedDateTime.slice(8,10));
+                yearStarted = parseInt(entries.startedDateTime.slice(0,4));
+
+                //Date computations
+                if(yearStarted < yearMod){
+                    monthMod = monthMod + 12;
+                }
+                if(dayMod < dayStarted){
+                    ageDay = (dayMod + 30) - dayStarted;
+                    if(monthMod % monthStarted > 1){
+                        ageMonth = (monthMod % monthStarted) - 1;
+                    }
+                }else{
+                    ageDay = dayMod - dayStarted;
+                    ageMonth = monthMod - monthStarted;
+                }
+
+                //ageMonth * 30 + ageDay = age counted to days
+                //1x3 contentAgeArry, where fields are: contentType, count, age
+                if(contentAgeArray.length === 0){
+                    contentAgeArray.push([contentType, 1, ageMonth * 30 + ageDay]);
+                }else{
+                    for(var i=0; i<contentAgeArray.length; i++){
+                        if(contentType.toLowerCase() === contentAgeArray[i][0].toLowerCase() ){
+                            var position = i;
+                            var exists = true;
+                            break;
+                        }
+                    }
+                    if(exists === true ){
+                        contentAgeArray[position][1] = contentAgeArray[position][1] + 1;
+                        contentAgeArray[position][2] = contentAgeArray[position][2] + (ageMonth * 30 + ageDay);
+                        exists=false;
+                    }else{
+                        contentAgeArray.push([contentType, 1, ageMonth * 30 + ageDay]);
+                    }
+                }
+            }
+        })
+
+    })
+    console.log('\n------ 1f ', contentAgeArray);
+        // contentAgeArray.forEach(data =>{
+        //     console.log('mesi ilikia:', data[2] / data[1], 'meres gia', data[0]);
+        // })
+    infoArray.push(contentAgeArray);
+    console.log('\n\nFINALLY?', infoArray)
+});
 
 
 
@@ -535,14 +535,3 @@ app.get('*', (req, res, next) => {
 app.listen(PORT, () => {
     console.log(`server initiated at port ${PORT}`);
 })
-
-
-// COUNT(DISTINCT column)
-// In this form, the COUNT(DISTINCT column) returns the number of unique non-null values in the column.
-// SELECT 
-//    COUNT(DISTINCT column) 
-// FROM 
-//    table_name
-// WHERE
-//    condition;
-// We often use the COUNT() function with the GROUP BY clause to return the number of items for each group. For example, we can use the COUNT() with the GROUP BY clause to return the number of films in each film category.
