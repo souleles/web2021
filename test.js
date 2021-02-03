@@ -124,7 +124,6 @@ app.post('/register', redirectHome, (req,res) => {
 })
 
 app.post('/signin', redirectHome, (req,res) => {
-    console.log('admin:', bcrypt.hashSync('admin'));
     const { userID } = req.session
     if(req.body.password && req.body.email){
         db.select('email', 'password', 'id').from('newusers')
@@ -167,43 +166,37 @@ app.get('/users', redirectLogin, (req,res) =>{
 app.post('/users', redirectLogin, (req,res) =>{
     const id =req.session.userID;
     //console.log(JSON.parse(JSON.stringify(req.body))); // = req.body
-    
     const har = req.body;
-    //save in database as json in info field
-    db.select('id', 'count').from('newusers')
-    .where('id', '=', id)
-    .then(data =>{
-        if(data[0].count = 0){
-            return db('newusers')
-            .returning('*')
-            .insert({info: har,
-                    last_entry: new Date(),
-                    count: data[0].count+1
-                    })
-            .where('id', '=', id)
-            .then((result) => {
-                console.log('result saved:', JSON.stringify(result));
-                res.send('success')
-            }).catch((err) => {
-                console.log(err);
-            });
-        }else{
-            return db('newusers')
-            .returning('*')
-            .update({info: har,
-                    last_entry: new Date(),
-                    count: data[0].count+1
-                    })
-            .where('id', '=', id)
-            .then((result) => {
-                console.log('result saved:', JSON.stringify(result));
-                res.send('success');
-            }).catch((err) => {
-                console.log(err);
-                res.send(err);
-            });
-        }
-    })
+    if(har === {}){
+        console.log('empty har, happens when u press save without choosing har')
+    }else{
+        //save in database as json in info field
+        db('entries')
+        .returning('*')
+        .insert({info: har,
+                user_id: id
+                })
+        .then((result) => {
+            console.log('result saved:', JSON.stringify(result));
+            res.send('success')
+        }).catch((err) => {
+            console.log(err);
+        });
+
+        return db('newusers')
+        .returning('*')
+        .update({
+                last_entry: new Date(),
+                })
+        .where('id', '=', id)
+        .then((result) => {
+            console.log('result saved:', JSON.stringify(result));
+            //res.send('success');
+        }).catch((err) => {
+            console.log(err);
+            res.send(err);
+        });
+    }
 
 });
 
@@ -261,12 +254,18 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
 
 app.get('/view',redirectLogin, (req,res) => {
     const id = req.session.userID;
-    db.select('count', 'last_entry').from('newusers')
-    .where('id', '=', id)
+    db.select(db.raw('count(user_id), last_entry')).from('entries').joinRaw('inner join newusers on user_id=id')
+    .where('user_id', '=', id)
+    .groupBy('last_entry')
     .returning('*')
     .then(data =>{
-        data[0].last_entry = data[0].last_entry.toISOString().slice(0,10);
-        res.send(data);
+        if (data.length === 0){
+            res.send('empty');
+        }else{
+            data[0].last_entry = data[0].last_entry.toISOString().slice(0,10);
+            res.send(data);
+        }
+
     })
 });
 
@@ -297,7 +296,7 @@ app.get('/admininfo', async (req,res) => {
     infoArray.push(parseInt(first[0].count))
 
     //Preprocessing, getting max length of entries
-    const preprocess = await db.select(db.raw('info -> \'log\' -> \'entries\' as entries, id')).from('newusers')
+    const preprocess = await db.select(db.raw('info -> \'log\' -> \'entries\' as entries')).from('entries')
                             .whereRaw('info is not NULL')
     //console.log(preprocess);
     var maxLength = 0;
@@ -319,7 +318,7 @@ app.get('/admininfo', async (req,res) => {
     //ADMIN 1b.
     const methodArray = [];
     for(var i=0; i < maxLength; i++){
-        const second = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' as method, count(info)', i)).from('newusers')
+        const second = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' as method, count(info)', i)).from('entries')
                             .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' is not NULL', i)
                             .groupBy('method')
         
@@ -359,7 +358,7 @@ app.get('/admininfo', async (req,res) => {
     //ADMIN 1c.
     const statusArray = [];
     for(var i=0; i < maxLength; i++){
-        const third = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' as status, count(info)', i)).from('newusers')
+        const third = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' as status, count(info)', i)).from('entries')
                             .whereRaw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' is not NULL', i)
                             .groupBy('status')
 
@@ -398,7 +397,7 @@ app.get('/admininfo', async (req,res) => {
     //ADMIN 1d.
     const urlArray = [];
     for(var i=0; i < maxLength; i++){
-        const forth = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' as url, count(info)', i)).from('newusers')
+        const forth = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' as url, count(info)', i)).from('entries')
                             .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' is not NULL', i)
                             .groupBy('url')
         

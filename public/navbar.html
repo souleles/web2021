@@ -29,7 +29,7 @@
             <div id="popup" class="modal">
                 <div class="description">
                     <h3>Your stats</h3><br>
-                    <p style="font-style: italic;">No entries yet!</p>
+                    <p style="font-style: italic;"></p>
                     <button id='dismiss-popup-btn'>Close</button>
                 </div>
                 
@@ -57,7 +57,11 @@
                 $('button#view').click(function(e){
                     e.preventDefault();
                     $.get( "/view", function( data ) {
-                        $( "p" ).html(`Number of Entries: `+ data[0].count + `<br>Latest entry: ` + data[0].last_entry);
+                        if(data==='empty'){
+                            $("p").html(`No entries yet`);
+                        }else{
+                            $( "p" ).html(`Number of Entries: `+ data[0].count + `<br>Latest entry: ` + data[0].last_entry);
+                        }
                         //alert( "Load was performed." );
                         //alert(data);
                     });
