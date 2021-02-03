@@ -19,7 +19,7 @@
             <!-- The `multiple` attribute lets users select multiple files. -->
             <input style="margin-top: 100px;" type="file" id="file" name="file" multiple accept=".har"><br><br> <!--onchange="onChange(event)"-->
             <button id="save"> Save </button>
-            <button download> Download! </button>
+            <input type="button" value="Download" onclick="downloadJson()"/>
     
     
     
@@ -101,7 +101,24 @@
                 };
                 reader.readAsText(fileList);
             }
-    
+             //downloads edited har as a new json file
+            function downloadJson(){
+                var blob = new Blob([har], {type : 'application/json'});
+                
+                var isIE = false || !!document.documentMode;
+                if (isIE) {
+                    window.navigator.msSaveBlob(blob, "new.json");
+                } else {
+                    var url = window.URL || window.webkitURL;
+                    link = url.createObjectURL(blob);
+                    var a = document.createElement("a");
+                    a.download = "new.json";
+                    a.href = link;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            };
             $(document).ready(function(){
                 $('button#save').click(function(e){
                     e.preventDefault();
