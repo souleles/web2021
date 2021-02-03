@@ -1,6 +1,3 @@
-//knex gia conenction me database -> knex.js.org documentation
-//TO DO: 1. bulking, ip(both for user)
-
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -270,18 +267,6 @@ app.get('/view',redirectLogin, (req,res) => {
 });
 
 
-app.post('/logout', redirectLogin, function(req, res){
-    req.session.destroy(function(){
-       console.log("user logged out.")
-    });
-    res.redirect('/signin');
- });
-
-
-
-
-
-
 //ΑDMIN PAGE
 app.get('/admin', (req,res) => {
     res.sendFile(path.join(__dirname, '/public', 'admin.html'));
@@ -438,7 +423,7 @@ app.get('/admininfo', async (req,res) => {
     const fifth2 = await db.countDistinct('email').from('providers1')
     console.log('\n------1e-2',fifth2[0].count); //typeof = string
     infoArray.push(parseInt(fifth2[0].count));
-    const drop = await db.schema.dropTable('providers1')
+    const drop = await db.schema.dropTable('providers1');
     
     //ADMIN 1f
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -523,6 +508,13 @@ app.get('/admininfo', async (req,res) => {
     res.send(infoArray);
 });
 
+
+app.post('/logout', redirectLogin, function(req, res){
+    req.session.destroy(function(){
+       console.log("user logged out.")
+    });
+    res.redirect('/signin');
+ });
 
 
 //ERROR PAGE
