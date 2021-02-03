@@ -13,7 +13,7 @@ const { response } = require('express');
 const { exists } = require('fs');
 const { count, info } = require('console');
 
-const PORT = process.env.PORT || 7001;
+const PORT = process.env.PORT || 7000;
 
 const db  = knex({
     client: 'pg',
@@ -439,6 +439,7 @@ app.get('/admininfo', async (req,res) => {
     const fifth2 = await db.countDistinct('email').from('providers1')
     console.log('\n------1e-2',fifth2[0].count); //typeof = string
     infoArray.push(parseInt(fifth2[0].count));
+    const drop = await db.schema.dropTable('providers1')
     
     //ADMIN 1f
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -520,6 +521,7 @@ app.get('/admininfo', async (req,res) => {
         // })
     infoArray.push(contentAgeArray);
     console.log('\n\nFINALLY?', infoArray)
+    res.send(infoArray);
 });
 
 

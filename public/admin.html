@@ -82,9 +82,22 @@
                 $('button#defaultOpen').click(function(e){
                     e.preventDefault();
                     $.get( "/admininfo", function( data ) {
-                        alert(data);
-                        $("p:first").html(`Number of Users:<br><br>`+ data);
-                        //alert( "Load was performed." );
+                        //alert(data[0]);
+                        $("p:first").html(`Number of Users:<br><br>`+ data[0]);
+                        $("p:nth-child(3)").html(`Amount of entries<br>per method:<br><br>`);
+                        for(let i=0; i<data[1].length; i++){
+                            $("p:nth-child(3)").append(data[1][i][0]+': '+data[1][i][1]+'<br>');
+                        }
+                        $("p:nth-child(4)").html(`Amount of entries<br>per status:<br><br>`);
+                        for(let i=0; i<data[2].length; i++){
+                            $("p:nth-child(4)").append(`Status: `+ data[2][i][0]+', Amount: ' + data[2][i][1]);
+                        }
+                        $("p:nth-child(5)").html(`Unique Domains:<br><br>`+ data[3]);
+                        $("p:nth-child(6)").html(`Unique connection providers:<br><br>`+ data[4]);
+                        $("p:nth-child(7)").html(`Average age<br>per content-type:<br><br>`);
+                        for(let i=0; i<data[5].length; i++){
+                            $("p:nth-child(7)").append(`<li>Content-type: `+ data[5][i][0]+'<br>Average Age: ' + data[5][i][2]/data[5][i][1]+'<br>');
+                        }
                     });
                 }); 
             })
