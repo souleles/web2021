@@ -13,7 +13,10 @@ DROP table;              //to delete already made table
 \d                       //to see the tables
 
 create TABLE entries (user_id integer NOT NULL, info json NOT NULL);
-create table newusers(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL, last_entry timestamp);
+create table newusers(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL, info json, count integer DEFAULT 0, last_entry timestamp, admin_pass integer DEFAULT 0);
+
+//to insert admin into newusers
+INSERT INTO newusers(email, password, username, admin_pass) VALUES('admin','$2a$10$L4D0aAZANZwWZjEVLkesJulO.RrUaVUHEdNFrnJLPGAITvrdOS10O','admin', 1);
 
 select * from table_name where false;   //name of columns
 

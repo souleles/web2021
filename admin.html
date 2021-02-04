@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Admin Page</title>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="../adminstyle.css">
+        <script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
+    <body>
+    <main>
+        <section class="glass">
+
+            <div class="sidenav">
+                <h2>Admin Panel</h2>
+                <button class="tablink" onclick="openPage('users', this)" id="defaultOpen">User Information</button><br>
+                <button class="tablink" onclick="openPage('timings', this)" >Timings</button><br>
+                <button class="tablink" onclick="openPage('headers', this)">Headers</button><br>
+                <button class="tablink" onclick="openPage('entries', this)">Entries</button><br>
+            </div>
+        
+            <div class="main-display">
+                
+                <div id="users" class="tabcontent">
+                    <h2>Users: Απεικόνιση Βασικών Πληροφοριών</h2>
+                    <p style="position:absolute; top:20%; left:25%;"></p>
+                    <p style="position:absolute; top:20%; left:45%;"></p>
+                    <p style="position:absolute; top:20%; left:65%;"></p>
+                    <p style="position:absolute; top:60%; left:25%;"></p>
+                    <p style="position:absolute; top:60%; left:45%;"></p>
+                    <p style="position:absolute; top:60%; left:65%;"></p>
+                </div>
+                  
+                <div id="timings" class="tabcontent">
+                    <h2>Timings: Ανάλυση χρόνων απόκρισης σε αιτήσεις</h2>
+                    <p></p> 
+                </div>
+                  
+                <div id="headers" class="tabcontent">
+                    <h2>Headers: Ανάλυση κεφαλίδων HTTP</h2>
+                    <p></p>
+                </div>
+                  
+                <div id="entries" class="tabcontent">
+                    <h2>Entires: Οπτικοποίηση δεδομένων</h2>
+                    <p></p>
+        
+                </div>
+            </div>
+            
+            <script>
+                //Change between Tabs
+                  function openPage(pageName,elmnt,color) {
+                  var i, tabcontent, tablinks;
+                  tabcontent = document.getElementsByClassName("tabcontent");
+                  for (i = 0; i < tabcontent.length; i++) {
+                      tabcontent[i].style.display = "none";
+                  }
+                  tablinks = document.getElementsByClassName("tablink");
+                  for (i = 0; i < tablinks.length; i++) {
+                      tablinks[i].style.backgroundColor = "";
+                  }
+                  document.getElementById(pageName).style.display = "block";
+                  }
+      
+                  // Get the element with id="defaultOpen" and click on it
+                  document.getElementById("defaultOpen").click();
+      
+                  //AJAX CALL for number of entries
+                  $(document).ready(function(){
+      
+                      $('button#defaultOpen').click(function(e){
+                          e.preventDefault();
+                          $.get( "/admininfo", function( data ) {
+                              //alert(data[0]);
+                              $("p:first").html(`Number of Users:<br><br>`+ data[0]);
+                              $("p:nth-child(3)").html(`Amount of entries<br>per method:<br><br>`);
+                              for(let i=0; i<data[1].length; i++){
+                                  $("p:nth-child(3)").append(data[1][i][0]+': '+data[1][i][1]+'<br>');
+                              }
+                              $("p:nth-child(4)").html(`Amount of entries<br>per status:<br><br>`);
+                              for(let i=0; i<data[2].length; i++){
+                                  $("p:nth-child(4)").append(`Status: `+ data[2][i][0]+', Amount: ' + data[2][i][1]);
+                              }
+                              $("p:nth-child(5)").html(`Unique Domains:<br><br>`+ data[3]);
+                              $("p:nth-child(6)").html(`Unique connection providers:<br><br>`+ data[4]);
+                              $("p:nth-child(7)").html(`Average age<br>per content-type:<br><br>`);
+                              for(let i=0; i<data[5].length; i++){
+                                  $("p:nth-child(7)").append(`<li>Content-type: `+ data[5][i][0]+'<br>Average Age: ' + data[5][i][2]/data[5][i][1]+'<br>');
+                              }
+                          });
+                      }); 
+                  })
+      
+            </script>
+
+        </section>
+       
+    </main>
+
+    </body>
+</html>

@@ -76,6 +76,10 @@ app.get('/register', redirectHome, (req, res) => {
     res.sendFile(path.join(__dirname, '/public', 'register.html'));
 });
 
+app.get('/authlogin', redirectHome, (req,res) => {
+    res.sendFile(path.join(__dirname, '/public', 'authlogin.html'));
+});
+
 app.post('/register', redirectHome, (req,res) => {
     let existsE = false;
     let existsU = false
@@ -83,8 +87,6 @@ app.post('/register', redirectHome, (req,res) => {
         const {email, username, password} = req.body
         const hash = bcrypt.hashSync(password);
         
-        
-
         //checking if user already exists
         db.select('email', 'username').from('newusers')
         .then(data => {
@@ -137,6 +139,36 @@ app.post('/signin', redirectHome, (req,res) => {
                 })
                 .catch(err => res.status(400).json('unable to get user'))
             }else{
+                //res.status(404).redirect('/signin');
+                res.status(400).send('Password is not correct')
+            }
+
+        })
+        .catch(err => res.status(400).send('Email does not exist'))
+    }else {res.send('Please fill all the fields');}
+})
+
+app.post('/authlogin', redirectHome, (req,res) => {
+    const { adminID } = req.session
+    if(req.body.password && req.body.username){
+        db.select('username', 'password', 'id', 'admin_pass').from('newusers')
+        .where('username', '=', req.body.username)
+        .then(data => {
+            const isAdmin = data[0].admin_pass;
+            const isValid = bcrypt.compareSync(req.body.password, data[0].password);
+            console.log('validation after post login:', isValid);
+            if (isValid & isAdmin==1){
+                return db.select('*').from('newusers')
+                .where('username', '=', req.body.username)
+                .then(user => {
+                    req.session.adminID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
+                    res.send(user);
+                })
+                .catch(err => res.status(400).json('unable to get user'))
+            }else if(isAdmin==0){
+                res.status(400).send('Not Authorized Login as User')
+            }
+            else{
                 //res.status(404).redirect('/signin');
                 res.status(400).send('Password is not correct')
             }
