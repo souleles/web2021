@@ -28,8 +28,9 @@ const db  = knex({
 //     tablename: 'sessions', // optional. Defaults to 'sessions'
 //   });
 
-app.use(bodyParser.urlencoded({extended: false})); //false?
-app.use(bodyParser.json());
+
+app.use(bodyParser.urlencoded({limit: '50000mb', extended: true})); //max har size 50000 mb
+app.use(bodyParser.json({limit: '50000mb', extended: true}));
 app.use(express.static('public'));
 
 app.use(
