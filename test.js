@@ -1,9 +1,3 @@
-//to do: 
-//      1. for ips (heatmaps) check ip stack, ip-api, ipapi
-//      2. at charts black color the letters, alkis eipe x-axis?
-//      3. at login page: change position of login as admin at top right corner
-//      4. user 3: plithos eggrafwn? -> a. plithos twn arxeiwn pou exei anebasei 
-//                                      b. plithos twn entries pou exei exoun ta arxeia (eggrafes)
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -12,6 +6,9 @@ const bcrypt = require('bcrypt-nodejs');
 const session = require('express-session');
 const knex = require('knex');
 const KnexSessionStore = require('connect-session-knex')(session);
+const { response } = require('express');
+const { exists } = require('fs');
+const { count, info } = require('console');
 
 const PORT = process.env.PORT || 7000;
 
@@ -30,7 +27,6 @@ const db  = knex({
 //     db,
 //     tablename: 'sessions', // optional. Defaults to 'sessions'
 //   });
-
 app.use(bodyParser.urlencoded({limit: '5000mb', extended: true})); //max har size 50000 mb
 app.use(bodyParser.json({limit: '5000mb', extended: true}));
 // app.use(bodyParser.urlencoded({extended: false})); //false?
@@ -49,19 +45,11 @@ app.use(
     }),
 );
 
+
 //Check if a user session has not been created
 const redirectLogin = (req,res,next) => {
     if(!req.session.userID){
         res.redirect('/signin')
-    }else{
-        next()
-    }
-}
-
-//Check if admin session has not been created
-const redirectLoginadmin = (req,res,next) => {
-    if(!req.session.adminID){
-        res.redirect('/authlogin')
     }else{
         next()
     }
@@ -76,13 +64,6 @@ const redirectHome = (req,res,next) => {
     }
 }
 
-const redirectHomeadmin = (req,res,next) => {
-    if(req.session.adminID){
-        res.redirect('/admin')
-    }else{
-        next()
-    }
-}
 
 app.get('/', redirectLogin, (req,res) =>{
     //const { userID } = req.session
@@ -95,10 +76,6 @@ app.get('/signin', redirectHome, (req,res) => {
 
 app.get('/register', redirectHome, (req, res) => {
     res.sendFile(path.join(__dirname, '/public', 'register.html'));
-});
-
-app.get('/authlogin', redirectHomeadmin, (req,res) => {
-    res.sendFile(path.join(__dirname, '/public', 'authlogin.html'));
 });
 
 app.post('/register', redirectHome, (req,res) => {
@@ -146,15 +123,13 @@ app.post('/register', redirectHome, (req,res) => {
 })
 
 app.post('/signin', redirectHome, (req,res) => {
-    const { userID } = req.session
     if(req.body.password && req.body.email){
-        db.select('email', 'password', 'id', 'admin_pass').from('newusers')
+        db.select('email', 'password', 'id').from('newusers')
         .where('email', '=', req.body.email)
         .then(data => {
-            const isAdmin = data[0].admin_pass;
             const isValid = bcrypt.compareSync(req.body.password, data[0].password);
             console.log('validation after post login:', isValid);
-            if (isValid==1 & isAdmin==0){
+            if (isValid){
                 return db.select('*').from('newusers')
                 .where('email', '=', req.body.email)
                 .then(user => {
@@ -162,40 +137,7 @@ app.post('/signin', redirectHome, (req,res) => {
                     res.send(user);
                 })
                 .catch(err => res.status(400).json('unable to get user'))
-            }else if (isAdmin){
-                res.status(400).send('Login As Admin')
-            }
-            else{
-                //res.status(404).redirect('/signin');
-                res.status(400).send('Password is not correct')
-            }
-
-        })
-        .catch(err => res.status(400).send('Email does not exist'))
-    }else {res.send('Please fill all the fields');}
-})
-
-app.post('/authlogin', redirectHomeadmin, (req,res) => {
-    const { adminID } = req.session
-    if(req.body.password && req.body.username){
-        db.select('username', 'password', 'id', 'admin_pass').from('newusers')
-        .where('username', '=', req.body.username)
-        .then(data => {
-            const isAdmin = data[0].admin_pass;
-            const isValid = bcrypt.compareSync(req.body.password, data[0].password);
-            console.log('validation after post login:', isValid);
-            if (isValid & isAdmin==1){
-                return db.select('*').from('newusers')
-                .where('username', '=', req.body.username)
-                .then(user => {
-                    req.session.adminID = data[0].id;                    //bazoume data[0] giati ta epistrefei ws pinaka, ola se ena keli
-                    res.send(user);
-                })
-                .catch(err => res.status(400).json('unable to get user'))
-            }else if(isAdmin==0){
-                res.status(400).send('Not Authorized Login as User')
-            }
-            else{
+            }else{
                 //res.status(404).redirect('/signin');
                 res.status(400).send('Password is not correct')
             }
@@ -220,83 +162,21 @@ app.get('/users', redirectLogin, (req,res) =>{
 
 
 app.post('/users', redirectLogin, (req,res) =>{
-    const id = req.session.userID;
-    const har = JSON.parse(req.body.har);
-    const isp = req.body.isp;
-    // const user_city = req.body.user_city;
-    // const user_lat = req.body.user_lat;
-    // const user_long = req.body.user_long;
-    const chunkSize = 100;
-    const rows = [];
-    
-    har.log.entries.forEach(data => {
-        const startedDateTime = data.startedDateTime;
-        const serverIPAddress = data.serverIPAddress;
-        const wait = data.timings.wait;
-        const method = data.request.method;
-        const url = data.request.url;
-        const status = data.response.status;
-        const statustext = data.response.statusText;
-        var content, lastMod, cacheControl, pragma, expires, age, host;
-
-        data.response.headers.forEach(headers =>{
-            if(headers.name){
-                if(headers.name === 'content-type' || headers.name === 'Content-Type'){
-                    content = headers.value.toLowerCase(); //because some may be the same but with a different upper cased letter
-                }
-                if(headers.name === 'last-modified'){
-                    lastMod = headers.value;
-                }
-
-                if(headers.name === 'pragma'){
-                    pragma = headers.value;
-                }
-                if(headers.name === 'expires'){
-                    expires = headers.value;
-                }
-                if(headers.name === 'age'){
-                    age = headers.value;
-                }
-                if(headers.name === 'cache-control'){
-                    cacheControl = headers.value;
-                }
-            }
-        })
-        data.request.headers.forEach(headers => {
-            if(headers.name){
-                if(headers.name === 'Host'){
-                    host = headers.value;
-                }
-
-            }
-        })
-        rows.push({user_id: id, 
-            starteddatetime: startedDateTime, 
-            serverip: serverIPAddress, 
-            wait: wait, 
-            method: method, 
-            url: url, 
-            status: status, 
-            statustext: statustext, 
-            content: content, 
-            lastmod: lastMod, 
-            cachecontrol: cacheControl, 
-            pragma: pragma, 
-            expires: expires, 
-            age: age, 
-            host: host
-        })
-    });
-    
+    const id =req.session.userID;
+    //console.log(JSON.parse(JSON.stringify(req.body))); // = req.body
+    const har = req.body;
     if(har === {}){
         console.log('empty har, happens when u press save without choosing har')
     }else{
         //save in database as json in info field
-
-        db.batchInsert('entries', rows, chunkSize)
+        db('entries')
         .returning('*')
+        .insert({info: har,
+                user_id: id
+                })
         .then((result) => {
-            console.log('saved HAR and user info succesfully');
+            console.log('result saved:', JSON.stringify(result));
+            res.send('success')
         }).catch((err) => {
             console.log(err);
         });
@@ -305,15 +185,11 @@ app.post('/users', redirectLogin, (req,res) =>{
         .returning('*')
         .update({
                 last_entry: new Date(),
-                isp: isp,
-                // user_city: user_city,
-                // user_lat: user_lat,
-                // user_long: user_long           
                 })
         .where('id', '=', id)
         .then((result) => {
-           // console.log('result saved:', JSON.stringify(result));
-            res.send('success');
+            console.log('result saved:', JSON.stringify(result));
+            //res.send('success');
         }).catch((err) => {
             console.log(err);
             res.send(err);
@@ -323,12 +199,14 @@ app.post('/users', redirectLogin, (req,res) =>{
 });
 
 
+
+
 app.get('/editprofile', redirectLogin, (req,res)=>{
     res.sendFile(path.join(__dirname, '/public', 'edit.html'));
 })
 
 app.post('/editprofile', redirectLogin, (req,res)=>{
-    console.log(req.body);
+    //console.log(req.body);
     db.select('username', 'password').from('newusers')
     .where('email', '=', req.body.email)
     .then(data => {
@@ -343,7 +221,7 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
                 .where('email', '=', req.body.email)
                 .update({
                     password: hash,
-                    thisKeyIsSkipped: undefined
+                    //thisKeyIsSkipped: undefined
                 }).then(data =>{
                     console.log('Password changed successfully!');
                     res.send({'password': data})
@@ -362,14 +240,16 @@ app.post('/editprofile', redirectLogin, (req,res)=>{
                     .where('email', '=', req.body.email)
                     .update({
                         username: req.body.username,
-                        thisKeyIsSkipped: undefined
+                        //thisKeyIsSkipped: undefined
                     }).then(data =>{
                         console.log('Username changed successfully!');
                         res.send({'username': data});
                     })
             }else{res.status(400).send('Error: Same username as your current, please pick another one')}
         }else{res.send('Please fill all the fields');}
-    }).catch(err => res.status(400).send('Wrong email or username exists'));
+    }).catch(err => {
+        res.status(400).send('Wrong email or username exists');
+        console.log(err)});
 })
 
 app.get('/view',redirectLogin, (req,res) => {
@@ -391,295 +271,300 @@ app.get('/view',redirectLogin, (req,res) => {
 
 
 //ΑDMIN PAGE
-app.get('/admin', redirectLoginadmin,(req,res) => {
+app.get('/admin', (req,res) => {
     res.sendFile(path.join(__dirname, '/public', 'admin.html'));
 });
 
+app.get('/admininfo1', async (req,res) => {
+    const infoArray=[];
 
-//USER INFORMATION
-//ADMIN 1a. 
-app.get('/admininfo1', redirectLoginadmin, (req,res) => {
+    //ADMIN 1a. 
+    const first = await db.count('*').from('newusers')
+    //console.log('------- 1a', first[0].count);
+    infoArray.push(parseInt(first[0].count))
+    res.send(first[0].count);
 
-    db.count('*').from('newusers').then( data => {
-        //console.log('------- 1a', data[0].count);
-        res.send(data[0].count);
+});
+
+app.get('/admininfo2', async (req,res) => {
+
+            //Preprocessing, getting max length of entries
+            const preprocess = await db.select(db.raw('info -> \'log\' -> \'entries\' as entries')).from('entries')
+            .whereRaw('info is not NULL')
+            //console.log(preprocess);
+            var maxLength = 0;
     
-    })
-});
-
-//ADMIN 1b.
-app.get('/admininfo2', redirectLoginadmin, (req,res) => {
-
-    var finalArray = [];
-    db.select(db.raw('method, count(method)')).from('entries')
-    .groupBy('method')
-    .then(data =>{
-        data.forEach( method =>{
-            finalArray.push([method.method, method.count])
-        })
-        //console.log('\n------------ 1b', finalArray);
-        res.send(finalArray);
-    })
-
-});
-
-//ADMIN 1c.
-app.get('/admininfo3', redirectLoginadmin, (req,res) => {
-
-    var finalArray = [];
-    db.select(db.raw('status, count(status)')).from('entries')
-    .groupBy('status')
-    .then(data =>{
-        data.forEach(status => {
-            finalArray.push([status.status, status.count])
-        })
-        //console.log('\n---------1c', finalArray);
-        res.send(finalArray);
-    })
-
-});
-
-//ADMIN 1d.
-app.get('/admininfo4', redirectLoginadmin, (req,res) => {
-
-    db('entries').countDistinct('url') 
-    .then( data => {
-        //console.log('\n---------1d', data[0].count);
-        res.send(data[0].count);
-    })
-});
-
-//ADMIN 1e.
-app.get('/admininfo5', redirectLoginadmin, (req,res) => {
-
-    db('newusers').countDistinct('isp') 
-    .then(data =>{
-        //console.log('\n---------1e', data[0].count);
-        res.send(data[0].count);
-    })
-
-});
-
-//ADMIN 1f
-app.get('/admininfo6', redirectLoginadmin, (req,res) => {  
+            const lengthArray = [];
     
+            preprocess.forEach(entries => {
+            lengthArray.push(entries.entries.length);
+            })
+    
+            for (i=0; i <= maxLength; i++){
+                if (lengthArray[i] > maxLength) {
+                    maxLength = lengthArray[i];
+                }
+            }
+
+    //ADMIN 1b.
+    var finalArray = [];
+    const methodArray = [];
+    for(var i=0; i < maxLength; i++){
+        const second = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' as method, count(info)', i)).from('entries')
+                            .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'method\' is not NULL', i)
+                            .groupBy('method')
+        
+        methodArray.push(second);    
+    }
+    console.log(methodArray)
+    var methodExists = false;
+    var position=0;
+    for(var j=0; j<methodArray.length; j++){
+        for(k=0; k<methodArray[j].length; k++){
+
+            if(finalArray.length===0){
+                finalArray.push([methodArray[j][k].method, parseInt(methodArray[j][k].count)]);
+            }
+            else{
+                for(m=0; m<finalArray.length; m++){
+                    if(methodArray[j][k].method === finalArray[m][0]){
+                        methodExists = true;
+                        position = m;
+                        break; 
+                    }
+                }
+
+                if(methodExists === true){
+                    finalArray[position][1] = parseInt(methodArray[j][k].count) + parseInt(finalArray[position][1]);
+                    methodExists = false;
+                }else{
+                    finalArray.push([methodArray[j][k].method, parseInt(methodArray[j][k].count)]);
+
+                }
+            }
+        }
+    }
+   //console.log('\n------------ 1b', finalArray);
+    res.send(finalArray)
+//     infoArray.push(finalArray);
+//     finalArray = [];
+});
+
+app.get('/admininfo3', async (req,res) => {
+        //Preprocessing, getting max length of entries
+        const preprocess = await db.select(db.raw('info -> \'log\' -> \'entries\' as entries')).from('entries')
+        .whereRaw('info is not NULL')
+        //console.log(preprocess);
+        var maxLength = 0;
+        var finalArray = [];
+        var statusArray = [];
+        const lengthArray = [];
+
+        preprocess.forEach(entries => {
+        lengthArray.push(entries.entries.length);
+        })
+
+        for (i=0; i <= maxLength; i++){
+            if (lengthArray[i] > maxLength) {
+                maxLength = lengthArray[i];
+            }
+        }
+
+    //ADMIN 1c.
+
+    for(var i=0; i < maxLength; i++){
+        const third = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' as status, count(info)', i)).from('entries')
+                            .whereRaw('info -> \'log\' -> \'entries\'->??->\'response\' ->>\'status\' is not NULL', i)
+                            .groupBy('status')
+
+        ///console.log(statusArray)
+        statusArray.push(third);
+    }
+
+
+    var statusexists = false;
+    var position=0;
+    for(var j=0; j<statusArray.length; j++){
+        for(k=0; k<statusArray[j].length; k++){
+
+            if(finalArray.length===0){
+                finalArray.push([parseInt(statusArray[j][k].status), parseInt(statusArray[j][k].count)]);
+            }
+            else{
+                for(m=0; m<finalArray.length; m++){
+                    if(parseInt(statusArray[j][k].status) === finalArray[m][0]){
+                        statusexists = true;
+                        position = m;
+                        break; 
+                    }
+                }
+
+                if(statusexists === true){
+                    finalArray[position][1] = parseInt(statusArray[j][k].count) + parseInt(finalArray[position][1]);
+                    statusexists=false;
+                }else{
+                    finalArray.push([parseInt(statusArray[j][k].status), parseInt(statusArray[j][k].count)]);
+
+                }
+            }
+        }
+    }
+    console.log('\n---------1c', finalArray);
+    res.send(finalArray);
+});
+
+app.get('/admininfo4', async (req,res) => {
+            //Preprocessing, getting max length of entries
+            const preprocess = await db.select(db.raw('info -> \'log\' -> \'entries\' as entries')).from('entries')
+            .whereRaw('info is not NULL')
+            //console.log(preprocess);
+            var maxLength = 0;
+    
+            const lengthArray = [];
+    
+            preprocess.forEach(entries => {
+            lengthArray.push(entries.entries.length);
+            })
+    
+            for (i=0; i <= maxLength; i++){
+                if (lengthArray[i] > maxLength) {
+                    maxLength = lengthArray[i];
+                }
+            }
+    var finalArray = [];
+    //ADMIN 1d.
+    const urlArray = [];
+    for(var i=0; i < maxLength; i++){
+        const forth = await db.select(db.raw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' as url, count(info)', i)).from('entries')
+                            .whereRaw('info -> \'log\' -> \'entries\'->??->\'request\' ->>\'url\' is not NULL', i)
+                            .groupBy('url')
+        
+        urlArray.push(forth);
+    }
+    var urlExists = false;
+    var position=0;
+
+    for(var j=0; j<urlArray.length; j++){
+        for(k=0; k<urlArray[j].length; k++){
+
+            if(finalArray.length===0){
+                finalArray.push([(urlArray[j][k].url), parseInt(urlArray[j][k].count)]);
+            }
+            else{
+                for(m=0; m<finalArray.length; m++){
+                    if((urlArray[j][k].url) === finalArray[m][0]){
+                        urlExists = true;
+                        position = m;
+                        break; 
+                    }
+                }
+
+                if(urlExists === true){
+                    finalArray[position][1] = parseInt(urlArray[j][k].count) + parseInt(finalArray[position][1]);
+                    urlExists = false;
+                }else{
+                    finalArray.push([(urlArray[j][k].url), parseInt(urlArray[j][k].count)]);
+                }
+            }
+        }
+    }
+    //console.log('\n-------1d', finalArray);
+    //console.log('\n-------1d', finalArray.length);
+    // infoArray.push(finalArray.length)
+    res.send(finalArray);
+});
+
+
+app.get('/admininfo5', async (req,res) => {
+
+
+    //ADMIN 1e.
+    const fifth1 = await db('newusers').select(db.raw('email into temp table providers1')) //change email to provider when added to database
+    const fifth2 = await db.countDistinct('email').from('providers1')
+    //console.log('\n------1e-2',fifth2[0].count); //typeof = string
+    //infoArray.push(parseInt(fifth2[0].count));
+    res.send(fifth2[0].count);
+    const drop = await db.schema.dropTable('providers1');
+});
+
+
+app.get('/admininfo6', async (req,res) => {  
+    const preprocess = await db.select(db.raw('info -> \'log\' -> \'entries\' as entries')).from('entries')
+    .whereRaw('info is not NULL')
+    
+    //ADMIN 1f
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     var contentAgeArray = [];
 
-    db.select('content', 'starteddatetime', 'lastmod').from('entries')
-    .whereNotNull('lastmod')
-    .then( data => {
-        data.forEach( data1 =>{
-            month = data1.lastmod.slice(8,11);
-            monthMod = parseInt(months.indexOf(month)+1);
-            dayMod = parseInt(data1.lastmod.slice(5,7));
-            yearMod = parseInt(data1.lastmod.slice(12,16));
-
-            dayStarted = parseInt(data1.starteddatetime.slice(5,7));
-            monthStarted = parseInt(data1.starteddatetime.slice(8,10));
-            yearStarted = parseInt(data1.starteddatetime.slice(0,4));
-
-            var ageDay=0;
-
-            //Date computations
-            if(yearStarted === yearMod){
-                ageDay = Math.abs((monthStarted-monthMod)*30 + (dayStarted-dayMod));
-            }else{
-                ageDay = Math.abs((yearStarted-yearMod)*12*30 + (monthStarted-monthMod)*30 + (dayStarted-dayMod));
-            }
-
-            //1x3 contentAgeArray, where fields are: content, count, age
-            if(contentAgeArray.length === 0){
-                contentAgeArray.push([data1.content, 1, ageDay]);
-            }else{
-                for(var i=0; i<contentAgeArray.length; i++){
-                    if(data1.content.toLowerCase() === contentAgeArray[i][0].toLowerCase() ){
-                        var position = i;
-                        var exists = true;
-                        break;
-                    }
+    //access antries
+    preprocess.forEach(data1 =>{
+        //console.log('data1', data1);
+        //loop through every entries object
+        data1.entries.forEach(entries =>{
+            var lastModExists = 0;
+            //console.log('------ entries', entries);
+            //loop through headers
+            entries.response.headers.forEach(header => {
+                if(header.name === 'last-modified'){
+                    month = header.value.slice(8,11);
+                    monthMod = parseInt(months.indexOf(month)+1);
+                    dayMod = parseInt(header.value.slice(5,7));
+                    yearMod = parseInt(header.value.slice(12,16));
+                    //console.log('\nLAST MODIFIED: ', header.value);
+                    lastModExists=1;
                 }
-                if(exists === true ){
-                    contentAgeArray[position][1] = contentAgeArray[position][1] + 1;
-                    contentAgeArray[position][2] = contentAgeArray[position][2] + ageDay;
-                    exists=false;
+                //console.log('---------header', header);
+            })
+            //get content-type and startedDateTime of entries that have last-modified
+            if(lastModExists === 1){
+                entries.response.headers.forEach(header => {
+                    if(header.name === 'content-type'){
+                        contentType = header.value;
+                    }
+                })
+                //console.log('startedDateTime: ', entries.startedDateTime.slice(0,10));
+                var ageDay=0;
+                dayStarted = parseInt(entries.startedDateTime.slice(5,7));
+                monthStarted = parseInt(entries.startedDateTime.slice(8,10));
+                yearStarted = parseInt(entries.startedDateTime.slice(0,4));
+
+                if(yearStarted === yearMod){
+                    ageDay = Math.abs((monthStarted-monthMod)*30 + (dayStarted-dayMod));
                 }else{
-                    contentAgeArray.push([data1.content, 1, ageDay]);
+                    ageDay = Math.abs((yearStarted-yearMod)*12*30 + (monthStarted-monthMod)*30 + (dayStarted-dayMod));
+                }
+                //console.log('age to days', ageMonth * 30 + ageDay);
+                //ageMonth * 30 + ageDay = age counted to days
+                //1x3 contentAgeArry, where fields are: contentType, count, age
+                if(contentAgeArray.length === 0){
+                    contentAgeArray.push([contentType, 1, ageDay]);
+                }else{
+                    for(var i=0; i<contentAgeArray.length; i++){
+                        if(contentType.toLowerCase() === contentAgeArray[i][0].toLowerCase() ){
+                            var position = i;
+                            var exists = true;
+                            break;
+                        }
+                    }
+                    if(exists === true ){
+                        contentAgeArray[position][1] = contentAgeArray[position][1] + 1;
+                        contentAgeArray[position][2] = contentAgeArray[position][2] + ageDay;
+                        exists=false;
+                    }else{
+                        contentAgeArray.push([contentType, 1, ageDay]);
+                    }
                 }
             }
         })
-        //console.log('\n------ 1f ', contentAgeArray);
-        res.send(contentAgeArray);
 
     })
+    //console.log('\n------ 1f ', contentAgeArray);
+
+    //infoArray.push(contentAgeArray);
+    //console.log('\n\nFINALLY?', infoArray)
+    res.send(contentAgeArray);
 });
 
-//TIMINGS
-app.get('/contentChart', redirectLoginadmin, (req,res) => {
-    db.select('content', 'starteddatetime', 'wait').from('entries')
-    .then( data => {
-        var contentChart= [];
-        var contentPosition = 0;
-
-        data.forEach( data1 => {
-            var exists = false;
-            var hour = parseInt(data1.starteddatetime.slice(11,13));
-
-            if(contentChart.length === 0){
-                contentChart.push([data1.content]);
-                contentChart[contentPosition][hour+1] = [data1.wait, 1];
-            }
-            else{
-                for(var i=0; i<contentChart.length; i++){
-                    //if content-type exists already in the array
-                    if(data1.content.toLowerCase() === contentChart[i][0].toLowerCase() ){
-                        var position = i;
-                        var exists = true;
-                        break;
-                    }
-                }
-                if(exists === true ){
-
-                    if(contentChart[position][hour+1]){
-                        contentChart[position][hour+1] = [contentChart[position][hour+1][0] + data1.wait, contentChart[position][hour+1][1] + 1];
-                    }else{
-                        contentChart[position][hour+1] = [data1.wait, 1];
-                    }
-                    exists=false;
-                }else{
-                    contentChart.push([data1.content]);
-                    contentPosition = contentPosition + 1;
-                    contentChart[contentPosition][hour+1] = [data1.wait, 1];
-                }
-            }
-        })
-
-        //console.log('\n\n----------A', contentChart);
-        res.send(contentChart);
-    })
-});
-
-
-app.get('/dayChart', redirectLoginadmin, (req,res) => {
-    var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    var dayChart= [];
-    for(let i=0; i<7; i++){
-        dayChart[i] = [weekday[i]];
-    }
- 
-
-    db.select('starteddatetime', 'wait').from('entries')
-    .then( data => {
-        data.forEach(data1 =>{
-            var date = new Date(data1.starteddatetime);
-            var day = weekday[date.getDay()];
-            var hour = parseInt(data1.starteddatetime.slice(11,13));
-
-            for(var i=0; i<dayChart.length; i++){
-                if(day.toLowerCase() === dayChart[i][0].toLowerCase() ){
-                    if(dayChart[i][hour+1]){
-                        dayChart[i][hour+1] = [dayChart[i][hour+1][0] + data1.wait, dayChart[i][hour+1][1] + 1];
-                    }else{
-                        dayChart[i][hour+1] = [data1.wait, 1];
-                    }
-                }
-            }
-        })
-        //console.log('\n\n----------B', dayChart);
-        res.send(dayChart);
-    })
-});
-
-
-app.get('/methodChart', redirectLoginadmin, (req,res) => {
-
-    db.select('method', 'wait', 'starteddatetime').from('entries')
-    .then( data => {
-        var methodPosition = 0;
-        var methodChart = [];
-
-        data.forEach( data1 => {
-            var method = data1.method;
-            var hour = parseInt(data1.starteddatetime.slice(11,13));
-            var exists = false;
-
-            if(methodChart.length === 0){
-                methodChart.push([method]);
-                methodChart[methodPosition][hour+1] = [data1.wait, 1];
-            }else{
-                for(var i=0; i<methodChart.length; i++){
-                    //if content-type exists already in the array
-                    if(method.toLowerCase() === methodChart[i][0].toLowerCase() ){
-                        var position = i;
-                        exists = true;
-                        break;
-                    }
-                }
-                if(exists === true ){
-
-                    if(methodChart[position][hour+1]){
-                        methodChart[position][hour+1] = [methodChart[position][hour+1][0] + data1.wait, methodChart[position][hour+1][1] + 1];
-                    }else{
-                        methodChart[[position]][hour+1] = [data1.wait, 1];
-                    }
-                    exists=false;
-                }else{
-                    methodChart.push([method]);
-                    methodPosition = methodPosition + 1;
-                    methodChart[methodPosition][hour+1] = [data1.wait, 1];
-                }
-            }
-        })
-        //console.log('\n\n----------C', methodChart);
-        res.send(methodChart);
-    })
-})
-
-
-app.get('/providerChart', redirectLoginadmin, (req,res) =>{
-
-    db.select('isp', 'starteddatetime', 'wait').from('entries').joinRaw('inner join newusers on user_id=id')
-    .then(data => {
-        var provArray = [];
-        var providerPosition = 0;
-
-        data.forEach( data1 => {
-            var isp = data1.isp;
-            var hour = parseInt(data1.starteddatetime.slice(11,13));
-            var exists = false;
-
-            if(provArray.length === 0){
-                provArray.push([isp]);
-                provArray[providerPosition][hour+1] = [data1.wait, 1];
-            }else{
-                for(var i=0; i<provArray.length; i++){
-
-                    if(isp.toLowerCase() === provArray[i][0].toLowerCase() ){
-                        var position = i;
-                        exists = true;
-                        break;
-                    }
-                }
-                if(exists === true ){
-
-                    if(provArray[position][hour+1]){
-                        provArray[position][hour+1] = [provArray[position][hour+1][0] + data1.wait, provArray[position][hour+1][1] + 1];
-                    }else{
-                        provArray[[position]][hour+1] = [data1.wait, 1];
-                    }
-                    exists=false;
-                }else{
-                    provArray.push([isp]);
-                    providerPosition = providerPosition + 1;
-
-                    provArray[providerPosition][hour+1] = [data1.wait, 1];
-                }
-            }
-        })
-        //console.log('\n\n----------D', provArray);
-        res.send(provArray);
-    });
-})
 
 app.post('/logout', redirectLogin, function(req, res){
     req.session.destroy(function(){
@@ -687,14 +572,6 @@ app.post('/logout', redirectLogin, function(req, res){
     });
     res.redirect('/signin');
  });
-
-app.post('/logoutAdmin', redirectLoginadmin, function(req, res){
-    req.session.destroy(function(){
-       console.log("admin logged out.")
-    });
-    res.redirect('/authlogin');
- });
-
 
 
 //ERROR PAGE
