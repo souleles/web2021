@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="../editstyle.css">
+        <title>Edit Profile</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        <script> 
+            $(function(){
+              $("#includedContent").load("navbar.html"); 
+            });
+            
+            //check if the user is not giving new password the same as old one
+            var check = function() {
+              if (document.getElementById('old').value ==
+                document.getElementById('new').value) {
+                document.getElementById('message').style.color = 'red';
+                document.getElementById('message').innerHTML = 'Same Passwords';
+                document.getElementById("sendButton").disabled = true;
+              }else{
+                document.getElementById('message').innerHTML = '';
+                document.getElementById("sendButton").disabled = false;
+              }
+            }
+        </script> 
+    </head>
+    <body>
+      <main>
+            
+        <section class=glass>
+        <div class="navbar"> 
+            <div id="includedContent"></div>
+        </div>
+        
+        <h4>Edit your Profile<br>Choose if you want to change your username or your password</h4>
+        
+        <button class="usr-btn" onclick="document.getElementById('id01').style.display='block'" style="position: absolute; top: 30%; left: 42%; width:auto;">Username</button>
+        <button class="pass-btn" onclick="document.getElementById('id02').style.display='block'" style="position: absolute; top: 30%; left: 48%; width:auto;">Password</button>
+        
+        <center>
+        <div id="id02" class="modal">
+          <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
+          <form class="modal-content" action="/editprofile" method="POST">
+    
+          <div class="container">
+            <h3 style="color: white;">Please fill to change your password.</h3>
+            <hr>
+            <input type="email" placeholder="Enter Email" name="email" required>
+            <input type="password" placeholder="Old Password" name="oldpassword" id='old' onkeyup='check();' required>
+            <input type="password" placeholder="New Password" name="newpassword" id='new' onkeyup='check();' pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" oninvalid="this.setCustomValidity('Must contain at east 8 characters, at least 1 UpperCase, 1 number, 1 special character')" oninput="this.setCustomValidity('')" required> 
+            <span id='message'></span>
+
+            <div class="clearfix">
+              <button type="button" onclick="document.getElementById('id02').style.display='none'" class="cancelbtn">Cancel</button>
+              <button type="submit" id='sendButton' class="signupbtn">Save</button>
+            </div>
+         </div>
+    
+        </form>
+        </div>
+
+<div id="id01" class="modal">
+    <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+    <form class="modal-content" action="/editprofile" method="POST">
+      
+      <div class="container">
+        <h3 style="color: white;">Please fill to change your username.</h3>
+        <hr>
+        <input type="email" placeholder="Enter Email" name="email" id="email" required>
+        <input type="password" placeholder="Enter new Username" name="username" id="username" required>
+  
+        <div class="clearfix">
+          <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+          <button type="submit" id='sendButton' class="signupbtn">Save</button>
+        </div>
+      </div>
+      
+    </form>
+  </div>
+</center>
+
+        <script>
+            // Get the modal
+            var modal = document.getElementById('id01');
+            var modal1 = document.getElementById('id02');
+            
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+              if (event.target == modal) {
+                modal.style.display = "none";
+              }else if(event.target == modal1){
+                modal1.style.display = "none";
+              }
+            }
+
+            $(document).ready(function(){
+                $('[id=sendButton]').click(function(e){
+                    e.preventDefault();
+                    $.post({
+                        url: '/editprofile',
+                        type: 'POST',
+                        //contentType: 'application/json', //false?
+                        dataType: 'json',
+                        data: {
+                            email: $('#email').val(),
+                            username: $('#username').val(),
+                            oldpassword: $('#old').val(),
+                            newpassword: $('#new').val()
+                        },
+                        success: function(res){
+                            if(res.username){
+                              swal({
+                                title: "Username Changed!",
+                                icon: "success",
+                                button: "Continue!",
+                              }).then((result) => {
+                                document.location = '/editprofile'
+                              });
+                            }else if(res.password){
+                              swal({
+                                title: "Password Changed!",
+                                icon: "success",
+                                button: "Continue!",
+                              }).then((result) => {
+                                document.location = '/editprofile'
+                              });                            }
+                            //document.location = '/editprofile';
+                        }, error: function(err){
+                              swal({
+                                    title: `${err.responseText}!`,
+                                    icon: "error",
+                                    button: "Continue!",
+                                  }).then((result) => {
+                                    document.location = '/editprofile'
+                                  });
+                        }
+                    });
+                }); 
+            })
+            </script>
+            </section>
+          </main>
+    </body>
+</html>

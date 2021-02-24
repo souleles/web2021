@@ -1,0 +1,195 @@
+* {
+    margin: 0;
+    padding: 0;  
+    box-sizing: border-box;
+}
+
+main {
+    font-family: "Poppins", sans-serif;
+    min-height: 100vh;
+    background: url(urban1.jpg) no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.glass {
+    background: black;
+    min-height: 90vh;
+    width: 70%;
+    background: linear-gradient(
+    to right bottom,
+    rgb(255, 255, 255, 0.7),
+    rgba(0,0,0, 0.5)
+    );
+    border-radius: 2rem;
+    box-shadow: 10px 10px 8px #000000;
+    z-index: 2;
+    backdrop-filter: blur(2rem);
+    display: flex;
+}
+
+.sidenav{
+    width: 20%;
+    max-height: max-content;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    text-align: center;
+    background: linear-gradient(
+        to right bottom,
+        rgba(255, 255, 255, 0.7),
+        rgba(255, 255, 255, 0.3)
+    );
+    border-radius: 2rem;
+    border: none;
+    box-shadow: 5px 5px 4px black;
+  
+}
+
+
+.sidenav .tablink {
+    display: flex;
+    border:0;
+	background: #363535;
+	display: block;
+	margin: 0rem 0rem;
+	text-align: center;
+    border: 2px solid #d0d1d1;
+    padding: 7px;
+	width: 160px;
+	outline: none;
+	color: #f0ffff;
+	border-radius: 24px;
+	transition: 0.24s;
+}
+
+.sidenav h2{
+    color: #363535;
+    text-align: center;
+    margin-bottom: 100px;
+    margin-top: 10px;
+    cursor: default;
+    text-decoration: underline;
+    text-decoration-color: #363535;
+}
+
+.sidenav .tablink:hover {
+    cursor: pointer;
+    background-color: #363535;
+	border-color: #363535;
+    color: white;
+	width: 190px;
+}
+
+.main-display{
+    width: 80%;
+    max-height: max-content;
+    
+}
+
+.main-display h2{
+    
+    color: #363535;
+    text-align: center;
+    text-decoration: underline;
+    text-decoration-color: #363535;
+    margin-bottom: 100px;
+    margin-top: 10px;
+    cursor: default;
+}
+
+.passive{
+    text-align: center;
+    width: 15%;
+    height: 20%;
+    word-wrap: break-word;
+    padding: 10px;
+    background: linear-gradient(
+    to right bottom,
+    rgba(255,255,255, 0.7),
+    rgba(255,255,255, 0.5)
+    );
+    border-radius: 1rem;
+    box-shadow: 6px 6px 20px rgba(122, 122, 122, 0.212);
+}
+
+
+.active{
+    width: 15%;
+    height: 20%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    text-align: center;
+    padding: 1px;
+    background: linear-gradient(
+    to right bottom,
+    rgba(255,255,255, 0.7),
+    rgba(255,255,255, 0.5)
+    );
+    border-radius: 1rem;
+    box-shadow: 6px 6px 20px rgba(122, 122, 122, 0.212);
+}
+/* customize scroll bar for Chrome
+p.active::-webkit-scrollbar{
+    width: 10px;
+    border-radius: 10px;
+}
+p.active::-webkit-scrollbar-track{
+    background: linear-gradient(
+    to right bottom,
+    rgba(255,255,255, 0.7),
+    rgba(255,255,255, 0.3)
+    );
+    border-radius: 10px;
+}
+p.active::-webkit-scrollbar-thumb{
+    background-color: #a7a7a7;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255, 0.7);
+} */
+/*customize scroll bar for Mozilla*/
+.active {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255, 0.7) #a7a7a7; 
+}
+
+.btn{
+    background: linear-gradient(
+        to right bottom,
+        rgba(255,255,255, 0.7),
+        rgba(255,255,255, 0.3)
+        );
+	margin: 0rem 0rem;
+	text-align: center;
+    border: 2px solid #363535;
+    padding: 6px;
+	width: max-content;
+    height: max-content;
+	outline: none;
+	color: black;
+	border-radius: 12px;
+	transition: 0.24s;
+}
+.btn:hover{
+    cursor: pointer;
+    background-color: #363535;
+	border-color: #363535;
+    color: black;
+}
+
+.main-display h4{
+    color: #363535;
+    position: absolute;
+    left: 45%;
+    top: 19%;
+}
+#charts{
+    position: absolute;
+    left: 60%;
+    top: 18%;
+}

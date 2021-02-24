@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../userstyle.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <title>Home Page</title>
+    </head>
+    <body>
+        <!-- Navigation Bar with Dropdown and Log out -->
+        <div class="topnav">
+            <a href="/users">Home</a>
+            <div class="dropdown">
+                <button class="dropbtn">Edit Profile 
+                  <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content">
+                  <a href="/editprofile">Edit Username/Password</a>
+                  <button id='view' >Data entries information</button>
+                </div>
+            </div>
+            <a href="/userMap.html">Heatmap</a>
+            <form action="/logout" method="POST">        
+            <input class="btn" type="submit" value="Log out">
+        </div>
+
+
+        <!-- Creating the pop up for user's data -->
+
+            <div id="popup" class="modal">
+                <div class="description">
+                    <h3>Your stats</h3><br>
+                    <p style="font-style: italic;"></p>
+                    <button id='dismiss-popup-btn'>Close</button>
+                </div>        
+            </div> 
+
+        <script type='text/javascript'>
+            var modal = document.getElementById('popup');
+            var btn = document.getElementById('view');
+            var span = document.getElementById('dismiss-popup-btn');
+            btn.onclick = function(){
+                modal.style.display = 'block';
+            }
+
+            span.onclick= function(){
+                modal.style.display = 'none';
+            }
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+            $(document).ready(function(){
+                $('button#view').click(function(e){
+                    e.preventDefault();
+                    $.get( "/view", function( data ) {
+                        if(data==='empty'){
+                            $("p").html(`No entries yet`);
+                        }else{
+                            $( "p" ).html(`Number of Entries: `+ data[0].count + `<br>Latest entry: ` + data[0].last_entry);
+                        }
+                        //alert( "Load was performed." );
+                        //alert(data);
+                    });
+                }); 
+            })
+
+        </script>
+    </body>
+</html>

@@ -1,6 +1,4 @@
 /node_modules
 /.vscode
 package-lock.json
-original.js
-jsonOldQueries.js
 copy_of_server_all_queries_in_one_api_use_of_async.js
