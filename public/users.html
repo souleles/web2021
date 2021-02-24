@@ -15,6 +15,7 @@
     </head>
     <body>
         
+<<<<<<< HEAD
         <main>
             
             <section class=glass>
@@ -84,6 +85,67 @@
                                                                         
                                                                     }
                                                                 }
+=======
+        <center>
+            <h1>HAR testing for parsing</h1>
+    
+            <!-- The `multiple` attribute lets users select multiple files. -->
+            <input style="margin-top: 100px;" type="file" id="file" name="file" multiple accept=".har"><br><br> <!--onchange="onChange(event)"-->
+            <button id="save"> Save </button>
+            <input type="button" value="Download" onclick="downloadJson()"/>
+    
+    
+    
+            <script type="text/javascript">
+    
+            var har;
+            document.getElementById('file').onchange = function(){onChange(event)};
+    
+            function onChange(event) {
+                //console.log(event.target.files);
+                //var file = event.target.files;
+                const fileList = event.target.files[0];
+    
+                var reader = new FileReader();
+                reader.onload = function(fileList) {
+                    // The file's text will be printed here
+                    //console.log(fileList.target.result);
+    
+                    //Parsing to json so we can edit
+                    var obj = JSON.parse(fileList.target.result);
+    
+                    for(field in obj.log){
+                        if (field !== 'entries' ){
+                            delete obj.log[field];
+                        }
+                        else{
+                            //console.log('field is:', field, 'and length is:', obj.log.entries.length);
+                            for(var i=0; i<obj.log.entries.length; i++){
+                                for(var field1 in obj.log.entries[i]){
+                                    //console.log(field1);
+                                    if(field1 !== 'startedDateTime' && field1 !== 'serverIPAddress' && field1 !== 'timings' && field1 !== 'request' && field1 !== 'response'){
+                                        delete obj.log.entries[i][field1];                            
+                                    }else{
+                                        for(var field2 in obj.log.entries[i][field1]){
+                                            if(field1 === 'timings'){
+                                                if(field2 !== 'wait'){
+                                                    delete obj.log.entries[i][field1][field2];
+                                                }
+                                            }else if(field1 === 'request'){
+                                                if(field2 === 'url'){
+                                                    //grabbing the domain name from the url and replacing in JSON
+                                                    var domain = new URL( obj.log.entries[i][field1][field2]);
+                                                    obj.log.entries[i][field1][field2] = domain.hostname;
+                                                }
+                                                if(field2 !== 'method' && field2 !== 'url' && field2 !== 'headers'){
+                                                    delete obj.log.entries[i][field1][field2];
+                                                }else if(field2 === 'headers'){
+                                                    for(var j=0; j<obj.log.entries[i].request.headers.length; j++){
+                                                        for (var field3 in obj.log.entries[i][field1].headers[j] ){
+                                                            if(obj.log.entries[i].request.headers[j].name !== 'content-type' && obj.log.entries[i].request.headers[j].name !== 'cache-control' && obj.log.entries[i].request.headers[j].name !== 'pragma' && obj.log.entries[i].request.headers[j].name !== 'expires'  && obj.log.entries[i].request.headers[j].name !== 'age' && obj.log.entries[i].request.headers[j].name !== 'last-modified' && obj.log.entries[i].request.headers[j].name !== 'Host'){
+                                                                delete obj.log.entries[i].request.headers[j][field3];
+                                                                   
+>>>>>>> 4db048e68c618430e93f424da9fecbacf0cbaffa
                                                             }
                                                         }
                                                     }else if(field1 === 'response'){
@@ -111,6 +173,7 @@
                         };
                         reader.readAsText(fileList);
                     }
+<<<<<<< HEAD
                     
                     //downloads edited har as a new json file
                     function downloadJson(){
@@ -128,6 +191,44 @@
                             document.body.appendChild(a);
                             a.click();
                             document.body.removeChild(a);
+=======
+                    console.log('new: ' + JSON.stringify(obj));
+                    har = JSON.stringify(obj);
+                };
+                reader.readAsText(fileList);
+            }
+             //downloads edited har as a new json file
+            function downloadJson(){
+                var blob = new Blob([har], {type : 'application/json'});
+                
+                var isIE = false || !!document.documentMode;
+                if (isIE) {
+                    window.navigator.msSaveBlob(blob, "new.json");
+                } else {
+                    var url = window.URL || window.webkitURL;
+                    link = url.createObjectURL(blob);
+                    var a = document.createElement("a");
+                    a.download = "new.json";
+                    a.href = link;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            };
+            $(document).ready(function(){
+                $('button#save').click(function(e){
+                    e.preventDefault();
+                    $.post({
+                        url: '/users',
+                        type: 'POST',
+                        contentType: 'application/json', //false?
+                        //dataType: ,
+                        data: har,
+                        success: function(res){
+                            alert('The file has been saved');
+                        }, error: function(err){
+                            alert('Error:', err);
+>>>>>>> 4db048e68c618430e93f424da9fecbacf0cbaffa
                         }
                     };
 
