@@ -5,6 +5,7 @@
         <link rel="stylesheet" href="../editstyle.css">
         <title>Edit Profile</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <script> 
             $(function(){
               $("#includedContent").load("navbar.html"); 
@@ -25,12 +26,18 @@
         </script> 
     </head>
     <body>
-        <div id="includedContent"></div>
-        <h2>Edit your Profile<br>Choose if you want to change your username or your password</h2>
-
-        <button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Username</button>
-        <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Password</button>
-
+      <main>
+            
+        <section class=glass>
+        <div class="navbar"> 
+            <div id="includedContent"></div>
+        </div>
+        
+        <h4>Edit your Profile<br>Choose if you want to change your username or your password</h4>
+        
+        <button class="usr-btn" onclick="document.getElementById('id01').style.display='block'" style="position: absolute; top: 30%; left: 42%; width:auto;">Username</button>
+        <button class="pass-btn" onclick="document.getElementById('id02').style.display='block'" style="position: absolute; top: 30%; left: 48%; width:auto;">Password</button>
+        
         <center>
         <div id="id02" class="modal">
           <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
@@ -88,7 +95,7 @@
             }
 
             $(document).ready(function(){
-                $('[id=sendButton]').submit(function(e){
+                $('[id=sendButton]').click(function(e){
                     e.preventDefault();
                     $.post({
                         url: '/editprofile',
@@ -103,19 +110,36 @@
                         },
                         success: function(res){
                             if(res.username){
-                              alert('Successful change of Username to: ' + res.username[0]);
+                              swal({
+                                title: "Username Changed!",
+                                icon: "success",
+                                button: "Continue!",
+                              }).then((result) => {
+                                document.location = '/editprofile'
+                              });
                             }else if(res.password){
-                              alert('Successful change of Password');
-                            }
-                            document.location = '/editprofile';
+                              swal({
+                                title: "Password Changed!",
+                                icon: "success",
+                                button: "Continue!",
+                              }).then((result) => {
+                                document.location = '/editprofile'
+                              });                            }
+                            //document.location = '/editprofile';
                         }, error: function(err){
-                            alert( err.responseText);
-                            // $('.errors').html('<li>Error: ' + err.responseText)
-                            //console.log(JSON.stringify(err));
+                              swal({
+                                    title: `${err.responseText}!`,
+                                    icon: "error",
+                                    button: "Continue!",
+                                  }).then((result) => {
+                                    document.location = '/editprofile'
+                                  });
                         }
                     });
                 }); 
             })
             </script>
+            </section>
+          </main>
     </body>
 </html>

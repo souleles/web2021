@@ -3,90 +3,102 @@
     <head>
         <meta charset="utf-8">
         <title>User Page</title>
+        <link rel="stylesheet" href="../userstyle.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <script> 
             $(function(){
-              $("#includedContent").load("navbar.html"); 
+            $("#includedContent").load("navbar.html"); 
             });
         </script> 
     </head>
-    <body style="background-image: linear-gradient(90deg, rgb(248, 226, 226), rgb(43, 43, 43) );">
-        <div id="includedContent"></div>
+    <body>
         
-        <center>
-            <h1>HAR testing for parsing</h1>
-    
-            <!-- The `multiple` attribute lets users select multiple files. -->
-            <input style="margin-top: 100px;" type="file" id="file" name="file" multiple accept=".har"><br><br> <!--onchange="onChange(event)"-->
-            <button id="save"> Save </button>
-            <button download> Download! </button>
-    
-    
-    
-            <script type="text/javascript">
-    
-            var har;
-            document.getElementById('file').onchange = function(){onChange(event)};
-    
-            function onChange(event) {
-                //console.log(event.target.files);
-                //var file = event.target.files;
-                const fileList = event.target.files[0];
-    
-                var reader = new FileReader();
-                reader.onload = function(fileList) {
-                    // The file's text will be printed here
-                    //console.log(fileList.target.result);
-    
-                    //Parsing to json so we can edit
-                    var obj = JSON.parse(fileList.target.result);
-    
-                    for(field in obj.log){
-                        if (field !== 'entries' ){
-                            delete obj.log[field];
-                        }
-                        else{
-                            //console.log('field is:', field, 'and length is:', obj.log.entries.length);
-                            for(var i=0; i<obj.log.entries.length; i++){
-                                for(var field1 in obj.log.entries[i]){
-                                    //console.log(field1);
-                                    if(field1 !== 'startedDateTime' && field1 !== 'serverIPAddress' && field1 !== 'timings' && field1 !== 'request' && field1 !== 'response'){
-                                        delete obj.log.entries[i][field1];                            
-                                    }else{
-                                        for(var field2 in obj.log.entries[i][field1]){
-                                            if(field1 === 'timings'){
-                                                if(field2 !== 'wait'){
-                                                    delete obj.log.entries[i][field1][field2];
-                                                }
-                                            }else if(field1 === 'request'){
-                                                if(field2 === 'url'){
-                                                    //grabbing the domain name from the url and replacing in JSON
-                                                    var domain = new URL( obj.log.entries[i][field1][field2]);
-                                                    obj.log.entries[i][field1][field2] = domain.hostname;
-                                                }
-                                                if(field2 !== 'method' && field2 !== 'url' && field2 !== 'headers'){
-                                                    delete obj.log.entries[i][field1][field2];
-                                                }else if(field2 === 'headers'){
-                                                    for(var j=0; j<obj.log.entries[i].request.headers.length; j++){
-                                                        for (var field3 in obj.log.entries[i][field1].headers[j] ){
-                                                            if(obj.log.entries[i].request.headers[j].name !== 'content-type' && obj.log.entries[i].request.headers[j].name !== 'cache-control' && obj.log.entries[i].request.headers[j].name !== 'pragma' && obj.log.entries[i].request.headers[j].name !== 'expires'  && obj.log.entries[i].request.headers[j].name !== 'age' && obj.log.entries[i].request.headers[j].name !== 'last-modified' && obj.log.entries[i].request.headers[j].name !== 'Host'){
-                                                                delete obj.log.entries[i].request.headers[j][field3];
-                                                                   
+        <main>
+            
+            <section class=glass>
+            <div class="navbar"> 
+                <div id="includedContent"></div>
+            </div>
+            
+            <center>
+                <div class="m-display">
+                    <h1>HAR files Uploading</h1>
+            
+                    <!-- The `multiple` attribute lets users select multiple files. -->
+                    <input style="position: absolute; top: 40%; left: 42%;" type="file" id="file" name="file" multiple accept=".har"><br><br> <!--onchange="onChange(event)"-->
+                    <button id="save" style="position: absolute; top: 50%; left: 42%;"> Save </button>
+                    <!-- <button download style="position: absolute; top: 50%; left: 47%;"> Download! </button> -->
+                    <input type="button" value="Download" onclick="downloadJson()" style="position: absolute; top: 50%; left: 47%;"/>
+            
+                </div>
+                    <script type="text/javascript">
+            
+                    var har;
+                    document.getElementById('file').onchange = function(){onChange(event)};
+            
+                    function onChange(event) {
+                        //console.log(event.target.files);
+                        //var file = event.target.files;
+                        const fileList = event.target.files[0];
+            
+                        var reader = new FileReader();
+                        reader.onload = function(fileList) {
+                            // The file's text will be printed here
+                            //console.log(fileList.target.result);
+            
+                            //Parsing to json so we can edit
+                            var obj = JSON.parse(fileList.target.result);
+            
+                            for(field in obj.log){
+                                if (field !== 'entries' ){
+                                    delete obj.log[field];
+                                }
+                                else{
+                                    //console.log('field is:', field, 'and length is:', obj.log.entries.length);
+                                    for(var i=0; i<obj.log.entries.length; i++){
+                                        for(var field1 in obj.log.entries[i]){
+                                            //console.log(field1);
+                                            if(field1 !== 'startedDateTime' && field1 !== 'serverIPAddress' && field1 !== 'timings' && field1 !== 'request' && field1 !== 'response'){
+                                                delete obj.log.entries[i][field1];                            
+                                            }else{
+                                                for(var field2 in obj.log.entries[i][field1]){
+                                                    if(field1 === 'timings'){
+                                                        if(field2 !== 'wait'){
+                                                            delete obj.log.entries[i][field1][field2];
+                                                        }
+                                                    }else if(field1 === 'request'){
+                                                        if(field2 === 'url'){
+                                                            //grabbing the domain name from the url and replacing in JSON
+                                                            var domain = new URL( obj.log.entries[i][field1][field2]);
+                                                            obj.log.entries[i][field1][field2] = domain.hostname;
+                                                        }
+                                                        if(field2 !== 'method' && field2 !== 'url' && field2 !== 'headers'){
+                                                            delete obj.log.entries[i][field1][field2];
+                                                        }else if(field2 === 'headers'){
+                                                            for(var j=0; j<obj.log.entries[i].request.headers.length; j++){
+                                                                for (var field3 in obj.log.entries[i][field1].headers[j] ){
+                                                                    if(obj.log.entries[i].request.headers[j].name !== 'content-type' && obj.log.entries[i].request.headers[j].name !== 'Content-Type' && obj.log.entries[i].request.headers[j].name !== 'cache-control' && obj.log.entries[i].request.headers[j].name !== 'pragma' && obj.log.entries[i].request.headers[j].name !== 'expires'  && obj.log.entries[i].request.headers[j].name !== 'age' && obj.log.entries[i].request.headers[j].name !== 'last-modified' && obj.log.entries[i].request.headers[j].name !== 'Host'){
+                                                                        delete obj.log.entries[i].request.headers[j][field3];
+                                                                        
+                                                                    }
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                }
-                                            }else if(field1 === 'response'){
-                                                if(field2!=='status' && field2!=='statusText' && field2 !== 'headers'){
-                                                    delete obj.log.entries[i][field1][field2];
-                                                }else if(field2 === 'headers'){
-                                                    for(var j=0; j<obj.log.entries[i].response.headers.length; j++){
-                                                        for (var field3 in obj.log.entries[i][field1].headers[j] ){
-                                                            if(obj.log.entries[i].response.headers[j].name !== 'content-type' && obj.log.entries[i].response.headers[j].name !== 'cache-control' && obj.log.entries[i].response.headers[j].name !== 'pragma' && obj.log.entries[i].response.headers[j].name !== 'expires'  && obj.log.entries[i].response.headers[j].name !== 'age' && obj.log.entries[i].response.headers[j].name !== 'last-modified' && obj.log.entries[i].response.headers[j].name !== 'Host'){
-                                                                delete obj.log.entries[i].response.headers[j][field3];                                                             
+                                                    }else if(field1 === 'response'){
+                                                        if(field2!=='status' && field2!=='statusText' && field2 !== 'headers'){
+                                                            delete obj.log.entries[i][field1][field2];
+                                                        }else if(field2 === 'headers'){
+                                                            for(var j=0; j<obj.log.entries[i].response.headers.length; j++){
+                                                                for (var field3 in obj.log.entries[i][field1].headers[j] ){
+                                                                    if(obj.log.entries[i].response.headers[j].name !== 'content-type' && obj.log.entries[i].response.headers[j].name !== 'Content-Type' && obj.log.entries[i].response.headers[j].name !== 'cache-control' && obj.log.entries[i].response.headers[j].name !== 'pragma' && obj.log.entries[i].response.headers[j].name !== 'expires'  && obj.log.entries[i].response.headers[j].name !== 'age' && obj.log.entries[i].response.headers[j].name !== 'last-modified' && obj.log.entries[i].response.headers[j].name !== 'Host'){
+                                                                        delete obj.log.entries[i].response.headers[j][field3];                                                             
+                                                                    }
+                                                                }
+            
                                                             }
                                                         }
-    
                                                     }
                                                 }
                                             }
@@ -94,32 +106,74 @@
                                     }
                                 }
                             }
-                        }
+                            console.log('new: ' + JSON.stringify(obj));
+                            har = JSON.stringify(obj);
+                        };
+                        reader.readAsText(fileList);
                     }
-                    console.log('new: ' + JSON.stringify(obj));
-                    har = JSON.stringify(obj);
-                };
-                reader.readAsText(fileList);
-            }
-    
-            $(document).ready(function(){
-                $('button#save').click(function(e){
-                    e.preventDefault();
-                    $.post({
-                        url: '/users',
-                        type: 'POST',
-                        contentType: 'application/json', //false?
-                        //dataType: ,
-                        data: har,
-                        success: function(res){
-                            alert('The file has been saved');
-                        }, error: function(err){
-                            alert('Error:', err);
+                    
+                    //downloads edited har as a new json file
+                    function downloadJson(){
+                        var blob = new Blob([har], {type : 'application/json'});
+                        
+                        var isIE = false || !!document.documentMode;
+                        if (isIE) {
+                            window.navigator.msSaveBlob(blob, "new.json");
+                        } else {
+                            var url = window.URL || window.webkitURL;
+                            link = url.createObjectURL(blob);
+                            var a = document.createElement("a");
+                            a.download = "new.json";
+                            a.href = link;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
                         }
+                    };
+
+                    $(document).ready(function(){
+                        var sendUserInfo;
+
+                        $('button#save').click(function(e){
+                                e.preventDefault();
+                                $.get('https://ipapi.co/json',function(data){
+                                    
+                                    isp=data.org;
+                                    user_ip=data.ip;
+                                    user_city=data.city;
+                                    user_lat=data.latitude;
+                                    user_long=data.longitude;
+
+                                    console.log(har, isp, user_ip, user_city, user_lat, user_long);
+                            
+                                    // var sendHar=JSON.stringify({har:har})
+                                    sendUserInfo = JSON.stringify({ har: har, isp: isp, user_city: user_city, user_lat: user_lat, user_long: user_long});
+
+                                    $.post({
+                                        url: '/users',
+                                        type: 'POST',
+                                        contentType: 'application/json', 
+                                        data: sendUserInfo,//har,
+                                        success: function(res){
+                                            swal({
+                                                title: "Successful Upload",
+                                                icon: "success",
+                                                button: "Continue!",
+                                            })
+                                        },error: function(err){
+                                            swal({
+                                                title: `${err.responseText}!`,
+                                                icon: "error",
+                                                button: "Continue!",
+                                            })
+                                        }
+                                    });
+                                });
+                        });
                     });
-                }); 
-            })
-            </script>
-            </center>
+                    </script>
+                </center>
+            </section>
+        </main>
     </body>
 </html>

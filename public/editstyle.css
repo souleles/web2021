@@ -1,7 +1,78 @@
+* {
+  margin: 0;
+}
+
+main {
+  font-family: "Poppins", sans-serif;
+  min-height: 100vh;
+  background: url(urban2.jpg) no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glass {
+  background: black;
+  min-height: 90vh;
+  width: 70%;
+  background: linear-gradient(
+  to right bottom,
+  rgb(255, 255, 255, 0.7),
+  rgba(0,0,0, 0.5)
+  );
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  border-bottom-left-radius: 2rem;
+  border-bottom-right-radius: 2rem;
+  box-shadow: 10px 10px 8px #000000;
+  z-index: 2;
+  backdrop-filter: blur(2rem);
+  overflow: hidden;
+}
+
+h4{
+  
+  color: #363535;
+  text-align: center;
+  text-decoration: none;
+  text-decoration-color: #363535;
+  position: absolute;
+  top: 20%;
+  left: 30%;
+  cursor: default;
+}
+
+
 body{
     font-family:  sans-serif;
 }
 
+.usr-btn{
+  background-color: #333;
+  color: white;
+  padding: 10px;
+  border-radius: 2px;
+}
+
+.usr-btn:hover{
+  background-color: #ddd;
+  color: #333;
+}
+
+.pass-btn{
+  background-color: #333;
+  color: white;
+  padding: 10px;
+  border-radius: 2px;
+}
+
+.pass-btn:hover{
+  background-color: #ddd;
+  color: #333;
+}
 .box{
     box-sizing: border-box;
 }
@@ -80,26 +151,27 @@ button:hover {
 .modal {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
+  z-index: 3; /* Sit on top */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
   height: 100%; /* Full height */
   overflow: auto; /* Enable scroll if needed */
-  background-color: #474e5d;
+  background: #000000;
+  color: #000000;
   padding-top: 50px;
 }
 
 /* Modal Content/Box */
 .modal-content {
     box-sizing: border-box;
-    width: 360px;
-    height: 550px;
+    width: max-content;
+    height: max-content;
     border: 2px solid #3498db;
     box-shadow: -3px -3px 7px #ffffff73,
                 3px 3px 5px rgba(94,104,121,0.288);
     border-radius: 5px;
-    background-color: black;
+    background: black;
     margin-top: 100px;
     overflow: hidden;
 }
@@ -132,7 +204,12 @@ hr {
   clear: both;
   display: table;
 }
-
+.swal-overlay {
+  background-color: rgba(0, 0, 0, 0.74);
+}
+.swal-button {
+  background-color: #4962B3;
+}
 /* Change styles for cancel button and signup button on extra small screens */
 @media screen and (max-width: 300px) {
   .cancelbtn, .signupbtn {
