@@ -11,6 +11,8 @@ const path = require('path');
 const bcrypt = require('bcrypt-nodejs');
 const session = require('express-session');
 const knex = require('knex');
+const { exists } = require('fs');
+const { count } = require('console');
 const KnexSessionStore = require('connect-session-knex')(session);
 
 const PORT = process.env.PORT || 7000;
@@ -224,8 +226,8 @@ app.post('/users', redirectLogin, (req,res) =>{
     const har = JSON.parse(req.body.har);
     const isp = req.body.isp;
     // const user_city = req.body.user_city;
-    // const user_lat = req.body.user_lat;
-    // const user_long = req.body.user_long;
+    const lat = req.body.lat;
+    const lon = req.body.lon;
     const chunkSize = 100;
     const rows = [];
     
@@ -306,9 +308,9 @@ app.post('/users', redirectLogin, (req,res) =>{
         .update({
                 last_entry: new Date(),
                 isp: isp,
-                // user_city: user_city,
-                // user_lat: user_lat,
-                // user_long: user_long           
+                lat: lat,
+                lon: lon 
+                // user_city: user_city
                 })
         .where('id', '=', id)
         .then((result) => {
@@ -322,6 +324,17 @@ app.post('/users', redirectLogin, (req,res) =>{
 
 });
 
+app.get('/heatmap',redirectLogin, (req,res)=>{
+    const id = req.session.userID;
+    db.select('serverip','content').from('entries')
+    .where('user_id', '=', id)
+    .where('content', 'LIKE', 'text/%') //after % can be html, html charset=utf-8 ,plain, javascript, css
+    .then(data => {
+        // console.log(data);
+        res.send(data);
+    })
+    .catch(err => res.status(400).json('error getting http info user send'));
+});
 
 app.get('/editprofile', redirectLogin, (req,res)=>{
     res.sendFile(path.join(__dirname, '/public', 'edit.html'));

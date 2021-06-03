@@ -14,7 +14,7 @@
     "body-parser": "^1.19.0",
     "connect-flash": "^0.1.1",
     "connect-pg-simple": "^6.2.1",
-    "connect-session-knex": "^2.0.0",
+    "connect-session-knex": "^2.1.0",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",
@@ -22,14 +22,16 @@
     "express-flash-messages": "^0.1.1",
     "express-session": "^1.17.1",
     "express-validator": "^6.7.0",
-    "knex": "^0.21.12",
+    "heatmap.js": "^2.0.5",
+    "knex": "^0.21.19",
+    "leaflet.heat": "^0.2.0",
     "nodemon": "^2.0.7",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "password-regexp": "^1.0.4",
-    "pg": "^8.5.1",
-    "sqlite3": "^5.0.0",
-    "validator": "^13.5.2"
+    "path": "^0.12.7",
+    "pg": "^8.6.0",
+    "sqlite3": "^5.0.0"
   },
   "description": ""
 }

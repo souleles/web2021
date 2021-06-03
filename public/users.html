@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="../userstyle.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <script> 
             $(function(){
@@ -133,21 +134,22 @@
 
                     $(document).ready(function(){
                         var sendUserInfo;
-
                         $('button#save').click(function(e){
-                                e.preventDefault();
+                                e.preventDefault();     
                                 $.get('https://ipapi.co/json',function(data){
                                     
                                     isp=data.org;
                                     user_ip=data.ip;
                                     user_city=data.city;
-                                    user_lat=data.latitude;
-                                    user_long=data.longitude;
+                                    lat=data.latitude;
+                                    lon=data.longitude;
+                                    
+                                    console.log( har, isp, user_ip, user_city, lat, lon);
 
-                                    console.log(har, isp, user_ip, user_city, user_lat, user_long);
-                            
                                     // var sendHar=JSON.stringify({har:har})
-                                    sendUserInfo = JSON.stringify({ har: har, isp: isp, user_city: user_city, user_lat: user_lat, user_long: user_long});
+                                    // sendUserInfo = JSON.stringify({ user_lat: user_lat, user_long: user_long});
+                                    // console.log(sendUserInfo)
+                                    sendUserInfo = JSON.stringify({ har: har, isp: isp, user_ip: user_ip, user_city: user_city, lat: lat, lon: lon});
 
                                     $.post({
                                         url: '/users',
@@ -168,7 +170,7 @@
                                             })
                                         }
                                     });
-                                });
+                            });
                         });
                     });
                     </script>

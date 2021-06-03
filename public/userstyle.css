@@ -116,7 +116,26 @@ body {
       float: left;
       overflow: hidden;
     }
+
+  .dropdown1 {
+    position: relative;
+    left: 40%;
+    overflow: hidden;
+  }
     
+  .dropdown1 .dropbtn {
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: underline;
+    font-weight: bold;
+    border: none;
+    outline: none;
+    color: #333;
+    padding: 14px 16px;
+    background-color: transparent;
+    font-family: inherit;
+    margin: 0;
+}
   .dropdown .dropbtn {
       cursor: pointer;
       font-size: 16px;  
@@ -130,8 +149,13 @@ body {
   }
   .dropdown:hover .dropbtn {
       background-color: #ddd;
-      color: black;
+      color: #333;
     }
+
+    .dropdown1:hover .dropbtn {
+      color: #4962B3;
+    }
+
     .dropdown-content {
       display: none;
       position: absolute;
@@ -194,7 +218,22 @@ body {
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
     transition: 1s;
   }
-  
+  /* background of map modal */
+  #myModal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+    transition: 1s;
+  }
+
   /* Modal Content */
   .description {
     margin-bottom: 5000px;
@@ -209,6 +248,20 @@ body {
     transition: 1s;
   }
   
+  /* Modal Content Map */
+  .description {
+    margin-bottom: 5000px;
+    text-align: center;
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%,50%);
+    width: 500px;
+    padding: 50px;
+    box-shadow: 0 5px 30px rgb(1, 48, 119);
+    background: #fff;
+    transition: 1s;
+  }
+
   h3{
     margin-top: -20px;
   }
@@ -239,15 +292,33 @@ body {
     margin-top: 20px;
     border-color: rgb(1, 48, 119);
   }
-  .hmap h4{
+
+  #dismiss-btn{
+    position: absolute;
+    top: 25%;
+    left: 61%;
+    border-color: #363535;
+  }
+
+  #dismiss-btn:hover{
+    color: #ddd;
+    background-color: #363535;
+    text-decoration: none;
+    cursor: default;
+  }
+  
+  .hmap{
     
-    color: #363535;
+    color: #000;
+    font-weight: bold;
+    font-size: 150%;
+    z-index: 2;
     text-align: center;
     text-decoration: none;
     text-decoration-color: #363535;
     position: absolute;
-    top: 20%;
-    left: 40%;
+    top: 24%;
+    left: 32%;
     cursor: default;
   }
 
@@ -257,7 +328,7 @@ body {
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 1);
     position:absolute; 
     top: 28%; 
-    left: 31%; 
+    left: 32%; 
     width:600px; 
     height: 400px
   }

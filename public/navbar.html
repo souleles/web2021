@@ -2,9 +2,12 @@
 <html>
     <head>
         <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+        <title>Home Page</title>
+
         <link rel="stylesheet" href="../userstyle.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <title>Home Page</title>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     </head>
     <body>
         <!-- Navigation Bar with Dropdown and Log out -->
@@ -19,23 +22,43 @@
                   <button id='view' >Data entries information</button>
                 </div>
             </div>
-            <a href="/userMap.html">Heatmap</a>
+            <a href="/userMap.html">Map</a>
+            <!-- <div class="dropdown">
+                <button class="dropbtn" id='show'>Heatmap</button>
+            </div> -->
             <form action="/logout" method="POST">        
             <input class="btn" type="submit" value="Log out">
         </div>
+        
+        <!-- Creating the pop up for heatmap -->
+        <!-- <button id="myBtn">Open Map</button> -->
 
+        <!-- The Modal -->
+        <div id="myModal" class="modal">
 
+            <!-- Modal content -->
+            <div class="modal-content">
+                <div class="hmap">
+                    <p>Οπτικοποίηση Δεδομένων</p>
+                </div>
+                <div id="map"></div>
+                <button id='dismiss-btn'>Close</button>
+            </div>
+
+        </div>
         <!-- Creating the pop up for user's data -->
 
-            <div id="popup" class="modal">
-                <div class="description">
-                    <h3>Your stats</h3><br>
-                    <p style="font-style: italic;"></p>
-                    <button id='dismiss-popup-btn'>Close</button>
-                </div>        
-            </div> 
+        <div id="popup" class="modal">
+            <div class="description">
+                <h3>Your stats</h3><br>
+                <p style="font-style: italic;"></p>
+                <button id='dismiss-popup-btn'>Close</button>
+            </div>        
+        </div> 
 
-        <script type='text/javascript'>
+        <!-- <script src="leaflet-heat.js"></script> -->
+        
+        <script>
             var modal = document.getElementById('popup');
             var btn = document.getElementById('view');
             var span = document.getElementById('dismiss-popup-btn');
@@ -51,6 +74,30 @@
                     modal.style.display = "none";
                 }
             }
+
+            // // Get the modal
+            // var modal_map = document.getElementById('myModal');
+            // // Get the button that opens the modal
+            // var btn_map = document.getElementById('heatmap');
+            // // close
+            // var span_map = document.getElementById('dismiss-btn');
+            // // When the user clicks on the button, open the modal
+            // btn_map.onclick = function() {
+            //     modal_map.style.display = "block";
+            // }
+
+            // // When the user clicks on <span> (x), close the modal
+            // span_map.onclick = function() {
+            //     modal_map.style.display = "none";
+            // }
+
+            // // When the user clicks anywhere outside of the modal, close it
+            // window.onclick = function(event) {
+            //     if (event.target == modal_map) {
+            //         modal_map.style.display = "none";
+            //     }
+            // } 
+
             $(document).ready(function(){
                 $('button#view').click(function(e){
                     e.preventDefault();
@@ -65,7 +112,6 @@
                     });
                 }); 
             })
-
         </script>
     </body>
 </html>
