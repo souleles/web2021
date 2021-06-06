@@ -13,6 +13,7 @@ const session = require('express-session');
 const knex = require('knex');
 const { exists } = require('fs');
 const { count } = require('console');
+const { userInfo } = require('os');
 const KnexSessionStore = require('connect-session-knex')(session);
 
 const PORT = process.env.PORT || 7000;
@@ -225,9 +226,9 @@ app.post('/users', redirectLogin, (req,res) =>{
     const id = req.session.userID;
     const har = JSON.parse(req.body.har);
     const isp = req.body.isp;
-    // const user_city = req.body.user_city;
     const lat = req.body.lat;
     const lon = req.body.lon;
+    const user_city = req.body.user_city;
     const chunkSize = 100;
     const rows = [];
     
@@ -309,8 +310,8 @@ app.post('/users', redirectLogin, (req,res) =>{
                 last_entry: new Date(),
                 isp: isp,
                 lat: lat,
-                lon: lon 
-                // user_city: user_city
+                lon: lon, 
+                user_city: user_city
                 })
         .where('id', '=', id)
         .then((result) => {
@@ -481,6 +482,7 @@ app.get('/admininfo6', redirectLoginadmin, (req,res) => {
 
     db.select('content', 'starteddatetime', 'lastmod').from('entries')
     .whereNotNull('lastmod')
+    .whereNotNull('content')
     .then( data => {
         data.forEach( data1 =>{
             month = data1.lastmod.slice(8,11);
@@ -530,6 +532,7 @@ app.get('/admininfo6', redirectLoginadmin, (req,res) => {
 //TIMINGS
 app.get('/contentChart', redirectLoginadmin, (req,res) => {
     db.select('content', 'starteddatetime', 'wait').from('entries')
+    .whereNotNull('content')
     .then( data => {
         var contentChart= [];
         var contentPosition = 0;
@@ -567,7 +570,7 @@ app.get('/contentChart', redirectLoginadmin, (req,res) => {
             }
         })
 
-        //console.log('\n\n----------A', contentChart);
+        // console.log('\n\n----------A', contentChart);
         res.send(contentChart);
     })
 });
@@ -689,9 +692,19 @@ app.get('/providerChart', redirectLoginadmin, (req,res) =>{
                 }
             }
         })
-        //console.log('\n\n----------D', provArray);
+        //console.log('\n\n8----------D', provArray);
         res.send(provArray);
     });
+})
+
+app.get('/entriesMap', redirectLoginadmin, (req,res)=>{
+    db.select(db.raw('serverip, id, username, user_city, lat, lon, count(content)')).from('entries').joinRaw('inner join newusers on user_id=id')
+    .whereNotNull('serverip')
+    .where('content', 'LIKE', 'text/%')
+    .groupBy('serverip', 'id')
+    .then(data => {
+        res.send(data);
+    })
 })
 
 app.post('/logout', redirectLogin, function(req, res){

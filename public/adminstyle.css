@@ -29,7 +29,9 @@ main {
     box-shadow: 10px 10px 8px #000000;
     z-index: 2;
     backdrop-filter: blur(2rem);
-    display: flex;
+    display: flex; 
+    position: fixed;
+    overflow: hidden;
 }
 
 .sidenav{
@@ -185,11 +187,52 @@ p.active::-webkit-scrollbar-thumb{
 .main-display h4{
     color: #363535;
     position: absolute;
-    left: 45%;
-    top: 19%;
+    left: 40%;
+    top: 18%;
 }
 #charts{
     position: absolute;
     left: 60%;
     top: 18%;
+}
+
+#map{
+    border-radius: 12px;
+    border: 2px solid #333;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 1);
+    /* position:absolute; 
+    top: 28%; 
+    left: 37%;  */
+    /* width: 750px; 
+    height: 500px; */
+    width: 80%;
+    min-height: 55vh;
+    top: 25%;
+    bottom: 25%;
+    margin: 0 auto;
+    position: relative;
+  }
+
+.dropdown1 {
+    position: relative;
+    left: 40%;
+    overflow: hidden;
+}
+    
+.dropdown1 .dropbtn {
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: underline;
+    font-weight: bold;
+    border: none;
+    outline: none;
+    color: #333;
+    padding: 14px 16px;
+    background-color: transparent;
+    font-family: inherit;
+    margin: 0;
+}
+
+.dropdown1:hover .dropbtn {
+    color: #4962B3;
 }

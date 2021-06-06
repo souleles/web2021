@@ -12,9 +12,7 @@ DROP table;              //to delete already made table
 \c test;                 //connect to test db
 \d                       //to see the tables
 
-//to do: at newusers add user_city
-//to do: and save ip requests of every user for admin 4
-create table newusers(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL, last_entry timestamp, isp text, lat float, lon float,  admin_pass integer DEFAULT 0);
+create table newusers(id serial primary key, email text unique NOT NULL, password text NOT NULL, username text unique NOT NULL, last_entry timestamp, isp text, lat float, lon float, user_city text, admin_pass integer DEFAULT 0);
 create table entries(user_id integer not null, starteddatetime text, serverip text, wait float, method text, url text, status integer, statustext text, content text, lastmod text, cachecontrol text, expires text, age text, pragma text, host text);
 
 select * from table_name where false;   //name of columns

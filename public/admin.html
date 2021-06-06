@@ -3,10 +3,13 @@
     <head>
         <title>Admin Page</title>
         <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
         <link rel="stylesheet" href="../adminstyle.css">
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
         <script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+        <script src="leaflet-ant-path.js"></script>
     </head>
     <body>
 
@@ -18,7 +21,7 @@
                     <button class="tablink" onclick="openPage('users', this)" id="defaultOpen">User Information</button><br>
                     <button class="tablink" onclick="openPage('timings', this)" >Timings</button><br>
                     <button class="tablink" onclick="openPage('headers', this)">Headers</button><br>
-                    <button class="tablink" onclick="openPage('entries', this)">Entries</button><br>
+                    <button class="tablink" onclick="openPage('entries', this)" id="entriesMap">Entries</button><br>
                     <form action="/logoutAdmin" method="POST">        
                     <input class="btn" type="submit" value="Log out">
                 </div>
@@ -29,7 +32,7 @@
                         <h2>Users: Απεικόνιση Βασικών Πληροφοριών</h2>
                         <p class="passive" style="position:absolute; top:20%; left:31%;"></p>
                         <p class="passive" style="position:absolute; top:20%; left:48%;"></p>
-                        <p class="passive" style="position:absolute; top:20%; left:65%;"></p>
+                        <p class="active" style="position:absolute; top:20%; left:65%;"></p>
                         <p class="passive" style="position:absolute; top:60%; left:31%;"></p>
                         <p class="passive" style="position:absolute; top:60%; left:48%;"></p>
                         <p class="active" style="position:absolute; top:60%; left:65%;"></p>                    
@@ -55,7 +58,11 @@
                     </div>
                       
                     <div id="entries" class="tabcontent">
-                        <h2>Entires: Οπτικοποίηση δεδομένων</h2>
+                        <h2>Entries: Οπτικοποίηση δεδομένων</h2>
+                        <div class="dropdown1">
+                            <button class="dropbtn" id='show'>Show Users Entries</button>
+                        </div>
+                        <div id="map" width="30" height="10"></div>
                         <p></p>
             
                     </div>
@@ -190,173 +197,277 @@
                     }); 
 
 
-            $(document).ready(function(){
+                    $(document).ready(function(){
 
-                $('#day').click(function(e){
-                    e.preventDefault();
-                    $.get("/dayChart", function(data) {
-                        var dataSett = [];
-                        var fullData = [];
+                        $('#day').click(function(e){
+                            e.preventDefault();
+                            $.get("/dayChart", function(data) {
+                                var dataSett = [];
+                                var fullData = [];
 
-                        for(let i=0; i<data.length; i++){
-                            for(let j=1; j<25; j++){
-                                if(data[i][j]){
-                                    dataSett[j-1] = data[i][j][0]/data[i][j][1];
-                                }else{
-                                    dataSett[j-1] = 0;
-                                }
-                            }
-                                //color array
-                                var rgb = [];
-
-                                for(let i = 0; i < 3; i++){
-                                    rgb.push(Math.floor(Math.random() * 255));
-                                }
-                            fullData.push({label: data[i][0], data: dataSett, borderColor: 'rgb('+ rgb.join(',') +')', backgroundColor: 'rgb(0,0,0,0)',fill:false});
-                            dataSett = [];
-                        }
-
-                                    var ctx = document.getElementById('myChart');
-                                    var myChart = new Chart(ctx, {
-
-                                        type: 'line',
-                                        data: {
-                                            labels: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
-                                            datasets: fullData
-                                        },
-                                        options: {
-                                            scales: {
-                                                yAxes: [{
-                                                    ticks: {
-                                                        beginAtZero: true
-                                                    }
-                                                }]
-                                            },
-                                            legend: {
-                                                display: true,
-                                                labels:{
-                                                    fontColor: 'rgb(0,0,0)'
-                                                }
-                                            }
-                                        
+                                for(let i=0; i<data.length; i++){
+                                    for(let j=1; j<25; j++){
+                                        if(data[i][j]){
+                                            dataSett[j-1] = data[i][j][0]/data[i][j][1];
+                                        }else{
+                                            dataSett[j-1] = 0;
                                         }
-                                    });
-                    })
-                });
-            });
+                                    }
+                                        //color array
+                                        var rgb = [];
 
-            $(document).ready(function(){
-
-                $('#method').click(function(e){
-                    e.preventDefault();
-                    $.get("/methodChart", function(data) {
-                        var dataSett = [];
-                        var fullData = [];
-
-                        for(let i=0; i<data.length; i++){
-                            for(let j=1; j<25; j++){
-                                if(data[i][j]){
-                                    dataSett[j-1] = data[i][j][0]/data[i][j][1];
-                                }else{
-                                    dataSett[j-1] = 0;
-                                }
-                            }
-                            //color array
-                            var rgb = [];
-
-                            for(let i = 0; i < 3; i++){
-                                rgb.push(Math.floor(Math.random() * 255));
-                            }
-                            fullData.push({label: data[i][0], data: dataSett, borderColor: 'rgb('+ rgb.join(',') +')', backgroundColor: 'rgb(0,0,0,0)',fill:false});
-                            dataSett = [];
-                        }
-
-                                    var ctx = document.getElementById('myChart');
-                                    var myChart = new Chart(ctx, {
-
-                                        type: 'line',
-                                        data: {
-                                            labels: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
-                                            datasets: fullData
-                                        },
-                                        options: {
-                                            scales: {
-                                                yAxes: [{
-                                                    ticks: {
-                                                        beginAtZero: true
-                                                    }
-                                                }]
-                                            },
-                                            legend: {
-                                                display: true,
-                                                labels:{
-                                                    fontColor: 'rgb(0,0,0)'
-                                                }
-                                            }
-                                        
+                                        for(let i = 0; i < 3; i++){
+                                            rgb.push(Math.floor(Math.random() * 255));
                                         }
-                                    });
+                                    fullData.push({label: data[i][0], data: dataSett, borderColor: 'rgb('+ rgb.join(',') +')', backgroundColor: 'rgb(0,0,0,0)',fill:false});
+                                    dataSett = [];
+                                }
 
+                                            var ctx = document.getElementById('myChart');
+                                            var myChart = new Chart(ctx, {
+
+                                                type: 'line',
+                                                data: {
+                                                    labels: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
+                                                    datasets: fullData
+                                                },
+                                                options: {
+                                                    scales: {
+                                                        yAxes: [{
+                                                            ticks: {
+                                                                beginAtZero: true
+                                                            }
+                                                        }]
+                                                    },
+                                                    legend: {
+                                                        display: true,
+                                                        labels:{
+                                                            fontColor: 'rgb(0,0,0)'
+                                                        }
+                                                    }
+                                                
+                                                }
+                                            });
+                            })
+                        });
                     });
-                });
-            });
-            $(document).ready(function(){
 
-                $('#provider').click(function(e){
-                    e.preventDefault();
-                    $.get("/providerChart", function(data) {
-                        var dataSett = [];
-                        var fullData = [];
+                    $(document).ready(function(){
 
-                        for(let i=0; i<data.length; i++){
-                            for(let j=1; j<25; j++){
-                                if(data[i][j]){
-                                    dataSett[j-1] = data[i][j][0]/data[i][j][1];
-                                }else{
-                                    dataSett[j-1] = 0;
-                                }
-                            }
-                            //color array
-                            var rgb = [];
+                        $('#method').click(function(e){
+                            e.preventDefault();
+                            $.get("/methodChart", function(data) {
+                                var dataSett = [];
+                                var fullData = [];
 
-                            for(let i = 0; i < 3; i++){
-                                rgb.push(Math.floor(Math.random() * 255));
-                            }
-                            fullData.push({label: data[i][0], data: dataSett, borderColor: 'rgb('+ rgb.join(',') +')', backgroundColor: 'rgb(0,0,0,0)',fill:false});
-                            dataSett = [];
-                        }
-
-                                    var ctx = document.getElementById('myChart');
-                                    var myChart = new Chart(ctx, {
-
-                                        type: 'line',
-                                        data: {
-                                            labels: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
-                                            datasets: fullData
-                                        },
-                                        options: {
-                                            scales: {
-                                                yAxes: [{
-                                                    ticks: {
-                                                        beginAtZero: true
-                                                    }
-                                                }]
-                                            },
-                                            legend: {
-                                                display: true,
-                                                labels:{
-                                                    fontColor: 'rgb(0,0,0)'
-                                                }
-                                            }
-                                        
+                                for(let i=0; i<data.length; i++){
+                                    for(let j=1; j<25; j++){
+                                        if(data[i][j]){
+                                            dataSett[j-1] = data[i][j][0]/data[i][j][1];
+                                        }else{
+                                            dataSett[j-1] = 0;
                                         }
-                                    });
+                                    }
+                                    //color array
+                                    var rgb = [];
 
+                                    for(let i = 0; i < 3; i++){
+                                        rgb.push(Math.floor(Math.random() * 255));
+                                    }
+                                    fullData.push({label: data[i][0], data: dataSett, borderColor: 'rgb('+ rgb.join(',') +')', backgroundColor: 'rgb(0,0,0,0)',fill:false});
+                                    dataSett = [];
+                                }
+
+                                            var ctx = document.getElementById('myChart');
+                                            var myChart = new Chart(ctx, {
+
+                                                type: 'line',
+                                                data: {
+                                                    labels: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
+                                                    datasets: fullData
+                                                },
+                                                options: {
+                                                    scales: {
+                                                        yAxes: [{
+                                                            ticks: {
+                                                                beginAtZero: true
+                                                            }
+                                                        }]
+                                                    },
+                                                    legend: {
+                                                        display: true,
+                                                        labels:{
+                                                            fontColor: 'rgb(0,0,0)'
+                                                        }
+                                                    }
+                                                
+                                                }
+                                            });
+
+                            });
+                        });
                     });
-                });
-            });
-            
-            </script>
+                    $(document).ready(function(){
+
+                        $('#provider').click(function(e){
+                            e.preventDefault();
+                            $.get("/providerChart", function(data) {
+                                var dataSett = [];
+                                var fullData = [];
+
+                                for(let i=0; i<data.length; i++){
+                                    for(let j=1; j<25; j++){
+                                        if(data[i][j]){
+                                            dataSett[j-1] = data[i][j][0]/data[i][j][1];
+                                        }else{
+                                            dataSett[j-1] = 0;
+                                        }
+                                    }
+                                    //color array
+                                    var rgb = [];
+
+                                    for(let i = 0; i < 3; i++){
+                                        rgb.push(Math.floor(Math.random() * 255));
+                                    }
+                                    fullData.push({label: data[i][0], data: dataSett, borderColor: 'rgb('+ rgb.join(',') +')', backgroundColor: 'rgb(0,0,0,0)',fill:false});
+                                    dataSett = [];
+                                }
+
+                                            var ctx = document.getElementById('myChart');
+                                            var myChart = new Chart(ctx, {
+
+                                                type: 'line',
+                                                data: {
+                                                    labels: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
+                                                    datasets: fullData
+                                                },
+                                                options: {
+                                                    scales: {
+                                                        yAxes: [{
+                                                            ticks: {
+                                                                beginAtZero: true
+                                                            }
+                                                        }]
+                                                    },
+                                                    legend: {
+                                                        display: true,
+                                                        labels:{
+                                                            fontColor: 'rgb(0,0,0)'
+                                                        }
+                                                    }
+                                                
+                                                }
+                                            });
+
+                            });
+                        });
+                    });
+
+                    
+                    //initialize arrays outside ajax calls 
+                    serverArray = [];
+                    serverInfoArray = [];
+                    userInfoArray= [];
+                    //AJAX CALL for Entries
+                    $(document).ready(function(){
+                        $('button#entriesMap').click(function(e){
+                            e.preventDefault();
+                            //map object initialize
+                            var mymap = L.map('map').setView([48.210033, 16.363449], 4);
+                            // var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+                            // mymap.addLayer(layer);
+                            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+                                maxZoom: 18,
+                                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                                    'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                                id: 'mapbox/streets-v11',
+                                tileSize: 512,
+                                zoomOffset: -1
+                            }).addTo(mymap);
+                            $.get("/entriesMap", function(data) {
+                                //create unique array for each registered users 
+                                let unique = [];
+                                data.forEach(element => {
+                                    if (!unique.includes(element.id)){
+                                        unique.push(element.id)
+                                        userInfoArray.push({
+                                            user_id: element.id, lat: element.lat, lon: element.lon, user_city: element.user_city
+                                        })
+                                    }
+                                        serverArray.push({
+                                        user_id: element.id , serverip: element.serverip, count: element.count, username: element.username
+                                    })
+                                })
+                                console.log(serverArray);
+                                console.log(userInfoArray);
+                                
+                                //get new serverInfoArray for each registered user and its coordinates with ipapi
+                                for(let i=0; i<serverArray.length; i++){
+                                    $.get('https://ipapi.co/' + serverArray[i].serverip + '/json',function(data){
+                                        lat=data.latitude;
+                                        lon=data.longitude;
+
+                                        userInfoArray.forEach(element=> {
+                                            if (serverArray[i].user_id==element.user_id){
+                                                serverInfoArray.push({
+                                                    lat: lat, lon: lon, username: serverArray[i].username, weight: serverArray[i].count, user_lat: element.lat, user_lon: element.lon
+                                                })
+                                            }
+                                        })
+                                    })
+                                }
+                            })
+                            $('button#show').click(function(e){
+                                e.preventDefault();
+                                console.log(serverInfoArray);
+                                //custom icon for users City
+                                var cityIcon = L.icon({
+                                    iconUrl: 'icon.png',
+                                    iconSize:     [25, 36], // size of the icon
+                                    iconAnchor:   [7, 30], // point of the icon which will correspond to marker's location
+                                    popupAnchor:  [5, 0] // point from which the popup should open relative to the iconAnchor
+                                });
+                                //add markers for users City
+                                userInfoArray.forEach(element =>{
+                                    L.marker([element.lat, element.lon], {icon: cityIcon})
+                                    .addTo(mymap)
+                                    .bindPopup(element.user_city)
+                                    .openPopup();
+                                })
+                                //add markers for sent ip locations
+                                //create polylines
+                                serverInfoArray.forEach(element =>{
+                                    myMarker = L.marker([element.lat, element.lon]);
+                                    // .bindPopup("request send: " + element.weight)
+                                    // .openPopup();
+                                    //marker with same coordinates stack on top of each other so only the last created is visible
+                                    //but each marker keeps its features (weight, lat, lon)
+                                    mymap.addLayer(myMarker);
+                                    //antPath plugin to animate the path between 2 markers, creates polyline object same as leaflet does.
+                                    antPolyline = L.polyline.antPath([[element.user_lat, element.user_lon], [element.lat, element.lon]],
+                                        {
+                                        "delay": 269,
+                                        "dashArray": [
+                                            1,
+                                            20
+                                        ],
+                                        "weight": element.weight,
+                                        "color": "blue",
+                                        "pulseColor": "#FFFFFF",
+                                        "paused": false,
+                                        "reverse": false,
+                                        "hardwareAccelerated": true
+                                        }
+                                    );
+                                    //add polyline to map as layer so it can stack changes for each element in serverInfoArray
+                                    mymap.addLayer(antPolyline);
+                                })
+                                mymap.fitBounds(antPolyline.getBounds());
+                            });
+                        });
+                        
+                    });
+                </script>
             </section>
         </main>
     </body>
